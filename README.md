@@ -1,4 +1,8 @@
-# AWS DevOps Course Task 1
+# rsschool-devops-course-tasks
+The Rolling Scopes School: AWS DevOps Course 2025 Q2
+
+
+# Task 1 Documentation
 
 This repository contains Terraform configurations for AWS infrastructure deployment.
 
