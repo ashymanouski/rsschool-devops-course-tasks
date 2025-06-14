@@ -18,4 +18,9 @@ variable "tags" {
     Environment = "main"
     ManagedBy   = "terraform"
   }
+}
+
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket for demo"
+  type        = string
 } 
