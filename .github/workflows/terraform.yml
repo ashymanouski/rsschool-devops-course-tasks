@@ -27,7 +27,7 @@ jobs:
 
       - name: Terraform Format
         run: terraform fmt -check
-        working-directory: terraform/task-1
+        working-directory: terraform
 
   terraform-plan:
     name: Terraform Plan
@@ -50,11 +50,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: terraform/task-1
+        working-directory: terraform
 
       - name: Terraform Plan
         run: terraform plan -var-file="env/main.tfvars"
-        working-directory: terraform/task-1
+        working-directory: terraform
 
   terraform-apply:
     name: Terraform Apply
@@ -77,8 +77,8 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: terraform/task-1
+        working-directory: terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -var-file="env/main.tfvars"
-        working-directory: terraform/task-1
+        working-directory: terraform
