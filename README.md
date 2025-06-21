@@ -106,3 +106,124 @@ This repository uses GitHub Actions for automated deployment. The workflow:
 The workflow runs on:
 - Push to main branch
 - Pull requests to main branch
+
+---
+
+# Task 2 Documentation
+
+## Overview
+
+Task 2 implements a complete VPC infrastructure for Kubernetes with public/private subnets, NAT Gateway, security groups, Network ACLs, and bastion host.
+
+## File Organization
+
+```
+terraform/
+├── networking.tf          # VPC, subnets, routing, NAT Gateway, Network ACLs
+├── compute-demo-workload.tf # Security groups and demo instances
+├── bastion.tf             # Bastion host configuration
+├── ssh.tf                 # SSH key pair and SSM parameters
+├── variables.tf           # Variable definitions
+├── outputs.tf             # Output values
+├── provider.tf            # AWS provider configuration
+├── backend.tf             # S3 backend configuration
+├── env/
+│   └── main.tfvars        # Environment-specific variables
+└── user-data/
+    └── common.sh          # Common user data script
+```
+
+## Network Architecture
+
+```
+Internet Gateway
+├── Public Subnet 1 (us-east-2a, 10.0.1.0/24)
+│   ├── NAT Gateway (with Elastic IP)
+│   └── Bastion Host (t4g.nano)
+├── Public Subnet 2 (us-east-2b, 10.0.2.0/24)
+│   └── Public Demo Instance
+├── Private Subnet 1 (us-east-2a, 10.0.10.0/24)
+│   └── Private Demo Instance 1
+└── Private Subnet 2 (us-east-2b, 10.0.11.0/24)
+    └── Private Demo Instance 2
+```
+
+## Infrastructure Components
+
+### VPC Configuration
+- **CIDR**: 10.0.0.0/16
+- **DNS**: Enabled (hostnames and support)
+- **Region**: us-east-2
+
+### Subnets
+- **Public Subnet 1**: 10.0.1.0/24 (us-east-2a) - NAT Gateway, Bastion, Demo Instance
+- **Public Subnet 2**: 10.0.2.0/24 (us-east-2b) - Demo Instance
+- **Private Subnet 1**: 10.0.10.0/24 (us-east-2a) - Demo Instance
+- **Private Subnet 2**: 10.0.11.0/24 (us-east-2b) - Demo Instance
+
+### Routing
+- **Public Subnets**: Route to Internet Gateway (0.0.0.0/0)
+- **Private Subnets**: Route to NAT Gateway (0.0.0.0/0)
+- **Internal**: All subnets can reach each other
+
+### Security
+- **Security Groups**: Instance-level filtering
+  - Public SG: HTTP (80) and HTTPS (443) from anywhere, all outbound (attached to public instances)
+  - Private SG: All traffic from same SG, all outbound (attached to private instances and public instances)
+  - Bastion SG: SSH (22) from anywhere, all outbound (attached to bastion)
+- **Network ACLs**: Subnet-level filtering
+  - Public NACL: All traffic allowed (with test deny rule for 8.8.8.8)
+  - Private NACL: All traffic allowed
+
+## Connectivity Instructions
+
+### Access Bastion Host
+```bash
+# Get bastion public IP
+terraform output bastion_public_ip
+
+# SSH to bastion (replace with your key and IP)
+ssh -i ~/.ssh/your-key.pem ec2-user@<bastion-public-ip>
+```
+
+### Direct SSH to Private Instances (via Bastion)
+```bash
+# Get bastion public IP
+terraform output bastion_public_ip
+
+# Get private instance IPs
+terraform output private_instance_ips
+
+# Connect directly to private instance through bastion
+ssh -i ~/.ssh/your-key.pem -o "ProxyCommand=ssh -i ~/.ssh/your-key.pem -W %h:%p ec2-user@<bastion-public-ip>" ec2-user@<private-instance-private-ip>
+```
+
+### Test Connectivity
+```bash
+# From private instance - test internet access
+ping 8.8.8.8
+curl google.com
+
+# Test VPC internal communication
+ping <other-instance-private-ip>
+
+# Test traceroute to see NAT path
+traceroute google.com
+```
+
+
+
+## Deployment
+
+### Initial Setup
+```bash
+cd terraform
+terraform init
+terraform plan -var-file="env/main.tfvars"
+terraform apply -var-file="env/main.tfvars"
+```
+
+### Cleanup
+```bash
+terraform destroy -var-file="env/main.tfvars"
+```
