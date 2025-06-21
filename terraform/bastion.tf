@@ -1,4 +1,3 @@
-# Security Group for Bastion Host
 resource "aws_security_group" "bastion" {
   name = "${var.project}-ec2-bastion-sg"
   vpc_id      = aws_vpc.main.id
@@ -22,7 +21,6 @@ resource "aws_security_group" "bastion" {
   })
 }
 
-# Bastion Host with NAT functionality
 resource "aws_instance" "bastion" {
   ami                     = var.bastion_ami_id
   instance_type           = var.instance_type
@@ -41,7 +39,6 @@ resource "aws_instance" "bastion" {
   })
 }
 
-# Elastic IP for Bastion Host
 resource "aws_eip" "bastion" {
   instance = aws_instance.bastion.id
   domain   = "vpc"

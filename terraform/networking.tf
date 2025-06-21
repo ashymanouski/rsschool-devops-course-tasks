@@ -122,3 +122,84 @@ resource "aws_route_table_association" "private_2" {
   subnet_id      = aws_subnet.private_2.id
   route_table_id = aws_route_table.private.id
 }
+
+resource "aws_network_acl" "public" {
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 90
+    action     = "deny"
+    cidr_block = "8.8.8.8/32" # for testing purposes only
+    from_port  = 22
+    to_port    = 22
+  }
+
+  ingress {
+    protocol   = "-1"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  egress {
+    protocol   = "-1"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project}-public-nacl"
+  })
+}
+
+resource "aws_network_acl" "private" {
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    protocol   = "-1"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  egress {
+    protocol   = "-1"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+
+  tags = merge(var.tags, {
+    Name = "${var.project}-private-nacl"
+  })
+}
+
+resource "aws_network_acl_association" "public_1" {
+  network_acl_id = aws_network_acl.public.id
+  subnet_id      = aws_subnet.public_1.id
+}
+
+resource "aws_network_acl_association" "public_2" {
+  network_acl_id = aws_network_acl.public.id
+  subnet_id      = aws_subnet.public_2.id
+}
+
+resource "aws_network_acl_association" "private_1" {
+  network_acl_id = aws_network_acl.private.id
+  subnet_id      = aws_subnet.private_1.id
+}
+
+resource "aws_network_acl_association" "private_2" {
+  network_acl_id = aws_network_acl.private.id
+  subnet_id      = aws_subnet.private_2.id
+}
