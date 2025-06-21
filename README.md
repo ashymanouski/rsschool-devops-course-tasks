@@ -1,6 +1,9 @@
 # rsschool-devops-course-tasks
 The Rolling Scopes School: AWS DevOps Course 2025 Q2
 
+## Quick Navigation
+- [Task 1: AWS Account Configuration](#task-1-documentation)
+- [Task 2: Basic Infrastructure Configuration](#task-2-documentation)
 
 # Task 1 Documentation
 
