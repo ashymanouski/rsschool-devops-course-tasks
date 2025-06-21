@@ -1,6 +1,6 @@
 resource "aws_security_group" "bastion" {
-  name = "${var.project}-ec2-bastion-sg"
-  vpc_id      = aws_vpc.main.id
+  name   = "${var.project}-ec2-bastion-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
     from_port   = 22
@@ -22,13 +22,13 @@ resource "aws_security_group" "bastion" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                     = var.bastion_ami_id
-  instance_type           = var.instance_type
-  key_name                = aws_key_pair.main.key_name
-  subnet_id               = aws_subnet.public_1.id
-  vpc_security_group_ids  = [aws_security_group.bastion.id, aws_security_group.private.id]
-  source_dest_check       = false
-  
+  ami                    = var.bastion_ami_id
+  instance_type          = var.instance_type
+  key_name               = aws_key_pair.main.key_name
+  subnet_id              = aws_subnet.public_1.id
+  vpc_security_group_ids = [aws_security_group.bastion.id, aws_security_group.private.id]
+  source_dest_check      = false
+
   user_data = base64encode(templatefile("${path.module}/user-data/common.sh", {
     hostname = "${var.project}-bastion"
   }))

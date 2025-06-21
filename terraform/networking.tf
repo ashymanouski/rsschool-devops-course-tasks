@@ -82,7 +82,7 @@ resource "aws_route_table_association" "public_2" {
 }
 
 resource "aws_eip" "nat" {
-  domain = "vpc"
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.main]
 
   tags = merge(var.tags, {

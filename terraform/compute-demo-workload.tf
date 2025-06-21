@@ -1,6 +1,6 @@
 resource "aws_security_group" "public" {
-  name = "${var.project}-ec2-public-sg"
-  vpc_id      = aws_vpc.main.id
+  name   = "${var.project}-ec2-public-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
     from_port   = 80
@@ -29,14 +29,14 @@ resource "aws_security_group" "public" {
 }
 
 resource "aws_security_group" "private" {
-  name = "${var.project}-ec2-private-sg"
-  vpc_id      = aws_vpc.main.id
+  name   = "${var.project}-ec2-private-sg"
+  vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -73,7 +73,7 @@ resource "aws_instance" "private_1" {
   key_name               = aws_key_pair.main.key_name
   subnet_id              = aws_subnet.private_1.id
   vpc_security_group_ids = [aws_security_group.private.id]
-  
+
   user_data = base64encode(templatefile("${path.module}/user-data/common.sh", {
     hostname = "${var.project}-private-demo-instance-1"
   }))
@@ -89,7 +89,7 @@ resource "aws_instance" "private_2" {
   key_name               = aws_key_pair.main.key_name
   subnet_id              = aws_subnet.private_2.id
   vpc_security_group_ids = [aws_security_group.private.id]
-  
+
   user_data = base64encode(templatefile("${path.module}/user-data/common.sh", {
     hostname = "${var.project}-private-demo-instance-2"
   }))
