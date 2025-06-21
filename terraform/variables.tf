@@ -53,11 +53,6 @@ variable "bastion_ami_id" {
   type        = string
 }
 
-variable "private_ami_id" {
-  description = "AMI ID for private instances"
-  type        = string
-}
-
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string

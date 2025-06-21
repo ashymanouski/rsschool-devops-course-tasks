@@ -30,11 +30,23 @@ resource "aws_instance" "bastion" {
   subnet_id               = aws_subnet.public_1.id
   vpc_security_group_ids  = [aws_security_group.bastion.id, aws_security_group.private.id]
   source_dest_check       = false
-
-  user_data = base64encode(templatefile("${path.module}/user-data/bastion.sh", {}))
+  
+  user_data = base64encode(templatefile("${path.module}/user-data/common.sh", {
+    hostname = "${var.project}-bastion"
+  }))
 
   tags = merge(var.tags, {
     Name = "${var.project}-bastion"
     Role = "Bastion-NAT"
+  })
+}
+
+# Elastic IP for Bastion Host
+resource "aws_eip" "bastion" {
+  instance = aws_instance.bastion.id
+  domain   = "vpc"
+
+  tags = merge(var.tags, {
+    Name = "${var.project}-bastion-eip"
   })
 }
