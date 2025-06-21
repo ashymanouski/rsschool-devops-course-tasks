@@ -1,6 +1,9 @@
 # rsschool-devops-course-tasks
 The Rolling Scopes School: AWS DevOps Course 2025 Q2
 
+## Quick Navigation
+- [Task 1: S3 Bucket Demo](#task-1-documentation)
+- [Task 2: VPC Infrastructure for Kubernetes](#task-2-documentation)
 
 # Task 1 Documentation
 
