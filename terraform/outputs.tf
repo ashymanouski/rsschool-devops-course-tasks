@@ -23,7 +23,7 @@ output "ssh_user_ssm_parameter" {
   value       = aws_ssm_parameter.ssh_user.name
 }
 
-output "private_instance_ips" {
-  description = "Private IP addresses of instances in private subnets"
-  value       = [aws_instance.private_1.private_ip, aws_instance.private_2.private_ip]
+output "k3s-master-node_private_ip" {
+  description = "Private IP addresses of K3s maser node"
+  value       = aws_instance.k3s-master-node.private_ip
 }
