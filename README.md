@@ -4,6 +4,7 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 ## Quick Navigation
 - [Task 1: AWS Account Configuration](#task-1-documentation)
 - [Task 2: Basic Infrastructure Configuration](#task-2-documentation)
+- [Task 3: K8s Cluster Configuration and Creation](#task-3-documentation)
 
 # Task 1 Documentation
 
@@ -215,6 +216,24 @@ traceroute google.com
 ```
 
 
+# Task 3 Documentation
+
+## Overview
+
+Task 3 implements a Kubernetes cluster using k3s on AWS EC2 instances with a bastion host for secure access.
+
+## Architecture
+
+```
+Internet Gateway
+├── Public Subnet 1 (us-east-2a, 10.0.1.0/24)
+│   ├── NAT Gateway (with Elastic IP)
+│   └── Bastion Host (t4g.nano)
+├── Private Subnet 1 (us-east-2a, 10.0.10.0/24)
+│   └── K3s Master Node (t4g.small)
+└── Private Subnet 2 (us-east-2b, 10.0.11.0/24)
+    └── K3s Worker Node (t4g.small)
+```
 
 ## Deployment
 
@@ -226,7 +245,56 @@ terraform plan -var-file="env/main.tfvars"
 terraform apply -var-file="env/main.tfvars"
 ```
 
-### Cleanup
+## Cluster Access
+
+### 1. Get Kubeconfig
+```bash
+# Fetch kubeconfig from SSM
+aws ssm get-parameter \
+  --region us-east-2 \
+  --name "/edu/aws-devops-2025q2/k3s/kubeconfig" \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text > ~/.kube/config
+```
+
+### 2. Establish SSH Tunnel
+```bash
+# Get bastion IP
+BASTION_IP=$(aws ec2 describe-instances \
+  --region us-east-2 \
+  --filters "Name=tag:Name,Values=aws-devops-2025q2-bastion" "Name=instance-state-name,Values=running" \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' \
+  --output text)
+
+# Create SSH tunnel to master node via bastion
+ssh -i ~/.ssh/your-key.pem -L 6443:<master-private-ip>:6443 -N ec2-user@$BASTION_IP
+```
+
+### 3. Test Cluster Access
+```bash
+# Test from local machine
+kubectl get nodes
+kubectl get pods --all-namespaces
+
+# Deploy test workload
+kubectl apply -f https://k8s.io/examples/pods/simple-pod.yaml
+kubectl get pods
+```
+
+## Expected Output
+```bash
+# kubectl get nodes
+NAME                    STATUS   ROLES                  AGE   VERSION
+ip-10-0-10-xxx.ec2.internal   Ready    control-plane,master   5m   v1.28.5+k3s1
+ip-10-0-11-xxx.ec2.internal   Ready    <none>                 3m   v1.28.5+k3s1
+
+# kubectl get all --all-namespaces
+NAMESPACE     NAME        READY   STATUS    RESTARTS   AGE
+default       pod/nginx   1/1     Running   0          2m
+```
+
+## Cleanup
 ```bash
 terraform destroy -var-file="env/main.tfvars"
 ```
