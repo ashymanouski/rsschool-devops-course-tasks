@@ -53,8 +53,23 @@ variable "bastion_ami_id" {
   type        = string
 }
 
+variable "k3s_ami_id" {
+  description = "AMI ID for K3s hosts"
+  type        = string
+}
+
 variable "instance_type" {
   description = "EC2 instance type"
+  type        = string
+}
+
+variable "k3s_master_instance_type" {
+  description = "K3s master node EC2 instance type"
+  type        = string
+}
+
+variable "k3s_worker_instance_type" {
+  description = "K3s worker node EC2 instance type"
   type        = string
 }
 
