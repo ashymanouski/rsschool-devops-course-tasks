@@ -27,3 +27,18 @@ output "k3s-master-node_private_ip" {
   description = "Private IP addresses of K3s maser node"
   value       = aws_instance.k3s-master-node.private_ip
 }
+
+output "k3s_worker_node_01_private_ip" {
+  description = "Private IP address of K3s worker node 01"
+  value       = aws_instance.k3s_worker_node_01.private_ip
+}
+
+output "k3s_node_token_ssm_parameter" {
+  description = "SSM parameter name for K3s node token"
+  value       = "/edu/${var.project}/k3s/node-token"
+}
+
+output "k3s_kubeconfig_ssm_parameter" {
+  description = "SSM parameter name for K3s kubeconfig"
+  value       = "/edu/${var.project}/k3s/kubeconfig"
+}
