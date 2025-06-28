@@ -8,7 +8,7 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 
 # Task 1 Documentation
 
-This repository contains Terraform configurations for AWS infrastructure deployment.
+Task 1: AWS Account Configuration
 
 ## Prerequisites
 
@@ -117,7 +117,7 @@ The workflow runs on:
 
 ## Overview
 
-Task 2 implements a complete VPC infrastructure for Kubernetes with public/private subnets, NAT Gateway, security groups, Network ACLs, and bastion host.
+Task 2: Basic Infrastructure Configuration
 
 ## File Organization
 
@@ -220,7 +220,7 @@ traceroute google.com
 
 ## Overview
 
-Task 3 implements a Kubernetes cluster using k3s on AWS EC2 instances with a bastion host for secure access.
+Task 3: K3s Cluster Configuration and Creation.
 
 ## Architecture
 
