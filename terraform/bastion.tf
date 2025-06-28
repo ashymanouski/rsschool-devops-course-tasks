@@ -37,8 +37,8 @@ resource "aws_instance" "bastion" {
   source_dest_check      = false
 
   user_data = base64encode(templatefile("${path.module}/user-data/bastion.sh", {
-    hostname           = "${var.project}-bastion"
-    master_private_ip  = aws_instance.k3s-master-node.private_ip
+    hostname          = "${var.project}-bastion"
+    master_private_ip = aws_instance.k3s-master-node.private_ip
   }))
 
   depends_on = [aws_instance.k3s-master-node]

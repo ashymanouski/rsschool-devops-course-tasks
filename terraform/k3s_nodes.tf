@@ -3,9 +3,9 @@ resource "aws_security_group" "k3s_nodes_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port   = 6443
-    to_port     = 6443
-    protocol    = "tcp"
+    from_port       = 6443
+    to_port         = 6443
+    protocol        = "tcp"
     security_groups = [aws_security_group.bastion.id]
   }
 
@@ -46,9 +46,9 @@ resource "aws_instance" "k3s-master-node" {
   iam_instance_profile   = aws_iam_instance_profile.k3s_master.name
 
   user_data = base64encode(templatefile("${path.module}/user-data/k3s-master.sh", {
-    hostname    = "${var.project}-k3s-master-node"
-    project     = var.project
-    aws_region  = var.aws_region
+    hostname   = "${var.project}-k3s-master-node"
+    project    = var.project
+    aws_region = var.aws_region
   }))
 
   tags = merge(var.tags, {
@@ -65,10 +65,10 @@ resource "aws_instance" "k3s_worker_node_01" {
   iam_instance_profile   = aws_iam_instance_profile.k3s_worker.name
 
   user_data = base64encode(templatefile("${path.module}/user-data/k3s-worker.sh", {
-    hostname       = "${var.project}-k3s-worker-node-01"
-    project        = var.project
-    aws_region     = var.aws_region
-    master_ip      = aws_instance.k3s-master-node.private_ip
+    hostname   = "${var.project}-k3s-worker-node-01"
+    project    = var.project
+    aws_region = var.aws_region
+    master_ip  = aws_instance.k3s-master-node.private_ip
   }))
 
   depends_on = [aws_instance.k3s-master-node]
