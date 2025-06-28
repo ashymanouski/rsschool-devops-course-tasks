@@ -36,7 +36,7 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [aws_security_group.bastion.id]
   source_dest_check      = false
 
-  user_data = base64encode(templatefile("${path.module}/user-data/bastion.sh", {
+  user_data = base64encode(templatefile("${path.module}/user-data/common.sh", {
     hostname          = "${var.project}-bastion"
     master_private_ip = aws_instance.k3s-master-node.private_ip
   }))
