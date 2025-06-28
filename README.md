@@ -258,17 +258,10 @@ aws ssm get-parameter \
   --output text > ~/.kube/config
 ```
 
-### 2. Establish SSH Tunnel
+### 2. Establish SSH Tunnel (for connection from local computer)
 ```bash
-# Get bastion IP
-BASTION_IP=$(aws ec2 describe-instances \
-  --region us-east-2 \
-  --filters "Name=tag:Name,Values=aws-devops-2025q2-bastion" "Name=instance-state-name,Values=running" \
-  --query 'Reservations[0].Instances[0].PublicIpAddress' \
-  --output text)
-
-# Create SSH tunnel to master node via bastion
-ssh -i ~/.ssh/your-key.pem -L 6443:<master-private-ip>:6443 -N ec2-user@$BASTION_IP
+# SSH tunnel via bastion to master node
+ssh -i ~/.ssh/your-key.pem -o "ProxyCommand=ssh -i ~/.ssh/your-key.pem -W %h:%p ubuntu@<bastion-public-ip>" -L 6443:localhost:6443 ubuntu@<master-private-ip>
 ```
 
 ### 3. Test Cluster Access
@@ -292,6 +285,8 @@ ip-10-0-11-xxx.ec2.internal   Ready    <none>                 3m   v1.28.5+k3s1
 # kubectl get all --all-namespaces
 NAMESPACE     NAME        READY   STATUS    RESTARTS   AGE
 default       pod/nginx   1/1     Running   0          2m
+........
+........
 ```
 
 ## Cleanup
