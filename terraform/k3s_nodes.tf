@@ -122,6 +122,11 @@ resource "aws_iam_role_policy_attachment" "k3s_master_ssm" {
   policy_arn = aws_iam_policy.k3s_master_ssm.arn
 }
 
+resource "aws_iam_role_policy_attachment" "k3s_master_ebs_csi" {
+  role       = aws_iam_role.k3s_master.name
+  policy_arn = aws_iam_policy.ebs_csi_driver_policy.arn
+}
+
 resource "aws_iam_instance_profile" "k3s_master" {
   name = "${var.project}-k3s-master-profile"
   role = aws_iam_role.k3s_master.name
@@ -170,6 +175,11 @@ resource "aws_iam_policy" "k3s_worker_ssm" {
 resource "aws_iam_role_policy_attachment" "k3s_worker_ssm" {
   role       = aws_iam_role.k3s_worker.name
   policy_arn = aws_iam_policy.k3s_worker_ssm.arn
+}
+
+resource "aws_iam_role_policy_attachment" "k3s_worker_ebs_csi" {
+  role       = aws_iam_role.k3s_worker.name
+  policy_arn = aws_iam_policy.ebs_csi_driver_policy.arn
 }
 
 resource "aws_iam_instance_profile" "k3s_worker" {
