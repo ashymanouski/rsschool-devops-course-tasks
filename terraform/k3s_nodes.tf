@@ -56,6 +56,31 @@ resource "aws_instance" "k3s-master-node" {
   })
 }
 
+
+# Wait for master node to be ready by checking SSM parameter
+resource "null_resource" "wait_for_master_ready" {
+  depends_on = [aws_instance.k3s-master-node]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Waiting for k3s master to be ready..."
+      for i in {1..30}; do
+        if aws ssm get-parameter \
+          --region ${var.aws_region} \
+          --name "/edu/${var.project}/k3s/node-token" \
+          --with-decryption \
+          --query 'Parameter.Value' \
+          --output text > /dev/null 2>&1; then
+          echo "Master node is ready!"
+          break
+        fi
+        echo "Attempt $i: Master not ready yet, waiting 10 seconds..."
+        sleep 10
+      done
+    EOT
+  }
+}
+
 resource "aws_instance" "k3s_worker_node_01" {
   ami                    = var.k3s_ami_id
   instance_type          = var.k3s_worker_instance_type
@@ -71,7 +96,7 @@ resource "aws_instance" "k3s_worker_node_01" {
     master_ip  = aws_instance.k3s-master-node.private_ip
   }))
 
-  depends_on = [aws_instance.k3s-master-node]
+  depends_on = [null_resource.wait_for_master_ready]
 
   tags = merge(var.tags, {
     Name = "${var.project}-k3s-worker-node-01"
