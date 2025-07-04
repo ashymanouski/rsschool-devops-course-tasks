@@ -4,10 +4,11 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 ## Quick Navigation
 - [Task 1: AWS Account Configuration](#task-1-documentation)
 - [Task 2: Basic Infrastructure Configuration](#task-2-documentation)
+- [Task 3: K8s Cluster Configuration and Creation](#task-3-documentation)
 
 # Task 1 Documentation
 
-This repository contains Terraform configurations for AWS infrastructure deployment.
+Task 1: AWS Account Configuration
 
 ## Prerequisites
 
@@ -116,7 +117,7 @@ The workflow runs on:
 
 ## Overview
 
-Task 2 implements a complete VPC infrastructure for Kubernetes with public/private subnets, NAT Gateway, security groups, Network ACLs, and bastion host.
+Task 2: Basic Infrastructure Configuration
 
 ## File Organization
 
@@ -215,6 +216,24 @@ traceroute google.com
 ```
 
 
+# Task 3 Documentation
+
+## Overview
+
+Task 3: K3s Cluster Configuration and Creation.
+
+## Architecture
+
+```
+Internet Gateway
+├── Public Subnet 1 (us-east-2a, 10.0.1.0/24)
+│   ├── NAT Gateway (with Elastic IP)
+│   └── Bastion Host (t4g.nano)
+├── Private Subnet 1 (us-east-2a, 10.0.10.0/24)
+│   └── K3s Master Node (t4g.small)
+└── Private Subnet 2 (us-east-2b, 10.0.11.0/24)
+    └── K3s Worker Node (t4g.small)
+```
 
 ## Deployment
 
@@ -226,7 +245,51 @@ terraform plan -var-file="env/main.tfvars"
 terraform apply -var-file="env/main.tfvars"
 ```
 
-### Cleanup
+## Cluster Access
+
+### 1. Get Kubeconfig
+```bash
+# Fetch kubeconfig from SSM
+aws ssm get-parameter \
+  --region us-east-2 \
+  --name "/edu/aws-devops-2025q2/k3s/kubeconfig" \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text > ~/.kube/config
+```
+
+### 2. Establish SSH Tunnel (for connection from local computer)
+```bash
+# SSH tunnel via bastion to master node
+ssh -i ~/.ssh/your-key.pem -o "ProxyCommand=ssh -i ~/.ssh/your-key.pem -W %h:%p ubuntu@<bastion-public-ip>" -L 6443:localhost:6443 ubuntu@<master-private-ip>
+```
+
+### 3. Test Cluster Access
+```bash
+# Test from local machine
+kubectl get nodes
+kubectl get pods --all-namespaces
+
+# Deploy test workload
+kubectl apply -f https://k8s.io/examples/pods/simple-pod.yaml
+kubectl get pods
+```
+
+## Expected Output
+```bash
+# kubectl get nodes
+NAME                    STATUS   ROLES                  AGE   VERSION
+ip-10-0-10-xxx.ec2.internal   Ready    control-plane,master   5m   v1.28.5+k3s1
+ip-10-0-11-xxx.ec2.internal   Ready    <none>                 3m   v1.28.5+k3s1
+
+# kubectl get all --all-namespaces
+NAMESPACE     NAME        READY   STATUS    RESTARTS   AGE
+default       pod/nginx   1/1     Running   0          2m
+........
+........
+```
+
+## Cleanup
 ```bash
 terraform destroy -var-file="env/main.tfvars"
 ```
