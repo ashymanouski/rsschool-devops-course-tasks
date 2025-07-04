@@ -1,0 +1,37 @@
+controller:
+  serviceType: ClusterIP
+  servicePort: 8080
+  
+  persistence:
+    enabled: true
+    storageClass: "ebs-storageclass-gp3"
+    size: 10Gi
+    accessMode: ReadWriteOnce
+  
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  
+  serviceAccount:
+    create: false
+    name: "jenkins"
+  
+  installPlugins:
+    - kubernetes:1.31.3
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+  
+  JCasC:
+    enabled: true
+    configScripts:
+      jobs: |
+        jobs:
+          - script: |
+              freestyleJob('hello-world') {
+                description('A simple Hello World freestyle job')
+                steps {
+                  shell('echo "Hello World!"')
+                }
+              } 
