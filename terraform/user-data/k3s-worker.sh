@@ -8,8 +8,6 @@ sudo apt update && sudo apt install -y unzip
 unzip awscliv2.zip
 sudo ./aws/install
 
-sleep 60 #Add a normal check when have time
-
 K3S_TOKEN=$(aws ssm get-parameter \
   --region ${aws_region} \
   --name "/edu/${project}/k3s/node-token" \

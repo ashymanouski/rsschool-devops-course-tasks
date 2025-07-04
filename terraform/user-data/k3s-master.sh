@@ -10,7 +10,10 @@ sudo ./aws/install
 
 curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
 
-sleep 30
+until sudo test -f /var/lib/rancher/k3s/server/node-token; do
+  echo "Waiting for k3s to start..."
+  sleep 5
+done
 
 K3S_TOKEN=$(sudo cat /var/lib/rancher/k3s/server/node-token)
 aws ssm put-parameter \

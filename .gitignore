@@ -7,3 +7,6 @@
 
 # Lock files
 *.terraform.lock.hcl
+
+# local scripts
+scripts/*
