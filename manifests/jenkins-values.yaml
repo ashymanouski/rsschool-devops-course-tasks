@@ -410,6 +410,7 @@ controller:
     - git:latest
     - configuration-as-code:latest
     - job-dsl:latest
+    - role-strategy:latest
 
   # If set to false, Jenkins will download the minimum required version of all dependencies.
   # -- Download the minimum required version or latest version of all dependencies
@@ -530,6 +531,43 @@ controller:
                   shell('echo "Hello world"')
                 }
               }
+      # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/demos/role-strategy-auth/README.md
+      security: |-
+        jenkins:
+          securityRealm:
+            local:
+              allowsSignup: false
+              enableCaptcha: false
+              users:
+                - id: "admin"
+                  name: "Jenkins Admin"
+                  password: "${chart-admin-password}"
+          authorizationStrategy:
+            roleBased:
+              roles:
+                global:
+                  - name: "admin"
+                    description: "Jenkins administrators"
+                    permissions:
+                      - "Overall/Administer"
+                    entries:
+                      - user: "admin"
+                  - name: "student"
+                    description: "RSS student"
+                    permissions:
+                      - "Overall/Read"
+                      - "Job/Build"
+                      - "Job/Read"
+                      - "Job/Cancel"
+                    entries:
+                      - user: "student"
+                  - name: "readonly"
+                    description: "Read-only users"
+                    permissions:
+                      - "Overall/Read"
+                      - "Job/Read"
+                    entries:
+                      - group: "authenticated"
 
     # Allows adding to the top-level security JCasC section. For legacy purposes, by default, the chart includes apiToken configurations
     # -- Jenkins Config as Code security-section
