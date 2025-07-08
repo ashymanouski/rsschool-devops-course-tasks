@@ -5,6 +5,7 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 - [Task 1: AWS Account Configuration](#task-1-documentation)
 - [Task 2: Basic Infrastructure Configuration](#task-2-documentation)
 - [Task 3: K8s Cluster Configuration and Creation](#task-3-documentation)
+- [Task 4: Jenkins Installation and Configuration](#task-4-documentation)
 
 # Task 1 Documentation
 
@@ -293,3 +294,76 @@ default       pod/nginx   1/1     Running   0          2m
 ```bash
 terraform destroy -var-file="env/main.tfvars"
 ```
+
+---
+
+# Task 4 Documentation
+
+## Overview
+
+Task 4: Jenkins Installation and Configuration
+
+## Prerequisites
+
+- K3s cluster from Task 3
+- Helm installed
+- kubectl configured
+
+## Installation Steps
+
+### 1. Create Jenkins Namespace
+```bash
+kubectl create namespace jenkins
+```
+
+### 2. Apply Volume Configuration
+```bash
+kubectl apply -f manifests/jenkins-01-volume.yaml
+```
+
+### 3. Fix Volume Permissions
+```bash
+kubectl apply -f manifests/fix-permissions-pod.yaml
+kubectl wait --for=condition=ready pod/jenkins-permissions-fix -n jenkins --timeout=300s
+kubectl logs jenkins-permissions-fix -n jenkins
+kubectl delete pod jenkins-permissions-fix -n jenkins
+```
+
+### 4. Apply Service Account
+```bash
+kubectl apply -f manifests/jenkins-02-sa.yaml
+```
+
+### 5. Install Jenkins via Helm
+```bash
+helm repo add jenkinsci https://charts.jenkins.io
+helm repo update
+helm install jenkins jenkinsci/jenkins --namespace jenkins --values manifests/jenkins-values.yaml
+```
+
+## Access Jenkins
+
+### Get Admin Password
+```bash
+kubectl exec -n jenkins jenkins-0 -- cat /run/secrets/additional/chart-admin-password
+```
+
+### Access Options
+
+#### Option 1: Port Forwarding
+```bash
+kubectl port-forward svc/jenkins 8080:8080 -n jenkins
+```
+Then access: http://localhost:8080
+
+#### Option 2: Direct Access via Bastion Reverse Proxy
+```bash
+# Get bastion IP from SSM
+aws ssm get-parameter \
+  --name "/edu/aws-devops-2025q2/bastion/eip" \
+  --region us-east-2 \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text
+```
+Then access: http://<bastion-ip>:8080
