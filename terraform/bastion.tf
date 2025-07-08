@@ -64,3 +64,13 @@ resource "aws_eip" "bastion" {
     Name = "${var.project}-bastion-eip"
   })
 }
+
+resource "aws_ssm_parameter" "bastion_eip" {
+  name  = "/edu/${var.project}/bastion/eip"
+  type  = "String"
+  value = var.ssh_user
+
+  tags = merge(var.tags, {
+    Name = "${var.project}-bastion-eip"
+  })
+}

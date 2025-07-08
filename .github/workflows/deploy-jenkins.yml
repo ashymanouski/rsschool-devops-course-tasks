@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 env:
-  KUBECONFIG: ${{ secrets.KUBECONFIG }}
+  PROJECT: aws-devops-2025q2
 
 jobs:
   deploy:
@@ -19,6 +19,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_EDU_ACCOUNT_ROLE_ARN }}
+        aws-region: ${{ secrets.AWS_EDU_ACCOUNT_REGION }}
+        
     - name: Setup kubectl
       uses: azure/setup-kubectl@v3
       with:
@@ -29,10 +35,50 @@ jobs:
       with:
         version: 'latest'
         
-    - name: Configure kubectl
+    - name: Get kubeconfig and bastion IP from SSM
       run: |
-        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        # Get kubeconfig
+        aws ssm get-parameter \
+          --name "/edu/${PROJECT}/k3s/kubeconfig" \
+          --region ${{ secrets.AWS_EDU_ACCOUNT_REGION }} \
+          --with-decryption \
+          --query 'Parameter.Value' \
+          --output text > kubeconfig
+        chmod 600 kubeconfig
+        
+        # Get bastion IP
+        BASTION_IP=$(aws ssm get-parameter \
+          --name "/edu/${PROJECT}/bastion/eip" \
+          --region ${{ secrets.AWS_EDU_ACCOUNT_REGION }} \
+          --with-decryption \
+          --query 'Parameter.Value' \
+          --output text)
+        echo "BASTION_IP=$BASTION_IP" >> $GITHUB_ENV
+        
+        # Get SSH key from SSM (assuming it's stored there)
+        aws ssm get-parameter \
+          --name "/edu/${PROJECT}/ssh/private-key" \
+          --region ${{ secrets.AWS_EDU_ACCOUNT_REGION }} \
+          --with-decryption \
+          --query 'Parameter.Value' \
+          --output text > ssh_key
+        chmod 600 ssh_key
+        
         export KUBECONFIG=./kubeconfig
+        
+    - name: Setup SSH tunnel
+      run: |
+        # Start SSH tunnel in background
+        ssh -i ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+          -L 6443:localhost:6443 ubuntu@${{ env.BASTION_IP }} -N &
+        SSH_TUNNEL_PID=$!
+        echo "SSH_TUNNEL_PID=$SSH_TUNNEL_PID" >> $GITHUB_ENV
+        
+        # Wait for tunnel to be established
+        sleep 5
+        
+        # Test connection
+        kubectl --kubeconfig=kubeconfig get nodes
         
     - name: Deploy Jenkins
       run: |
@@ -82,3 +128,11 @@ jobs:
         kubectl get svc -n jenkins
         
         echo "Jenkins deployment completed successfully!"
+        
+    - name: Cleanup SSH tunnel
+      if: always()
+      run: |
+        if [ ! -z "${{ env.SSH_TUNNEL_PID }}" ]; then
+          kill ${{ env.SSH_TUNNEL_PID }} || true
+          echo "SSH tunnel closed"
+        fi
