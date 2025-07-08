@@ -68,7 +68,7 @@ resource "aws_eip" "bastion" {
 resource "aws_ssm_parameter" "bastion_eip" {
   name  = "/edu/${var.project}/bastion/eip"
   type  = "String"
-  value = var.ssh_user
+  value = aws_eip.bastion.public_ip
 
   tags = merge(var.tags, {
     Name = "${var.project}-bastion-eip"
