@@ -15,7 +15,7 @@ on:
       - '.github/workflows/deploy-jenkins.yml'
 
 permissions:
-  actions: write
+  id-token: write
   contents: read
 
 env:
