@@ -396,14 +396,22 @@ docker push your-dockerhub-username/rsschool-devops-course-flask-app:latest
 
 **Docker Hub**: https://hub.docker.com/r/your-dockerhub-username/rsschool-devops-course-flask-app
 
-### 2. Helm Deployment
+### 2. Update Helm Values
+Before deployment, update the Docker image repository in `helm/application/flask/values.yaml` with your image that you pushed:
+```yaml
+image:
+  repository: your-dockerhub-username/rsschool-devops-course-flask-app
+  tag: latest
+```
+
+### 3. Helm Deployment
 ```bash
 kubectl create namespace flask
 helm install flask-app ./helm/application/flask -n flask
 kubectl get all -n flask
 ```
 
-### 3. Access the Application
+### 4. Access the Application
 
 #### Option 1: Via Bastion Reverse Proxy (Recommended)
 ```bash
