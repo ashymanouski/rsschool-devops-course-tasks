@@ -394,7 +394,7 @@ docker build -t your-dockerhub-username/rsschool-devops-course-flask-app:latest 
 docker push your-dockerhub-username/rsschool-devops-course-flask-app:latest
 ```
 
-**Docker Hub**: https://hub.docker.com/r/your-dockerhub-username/rsschool-devops-course-flask-app
+**Docker Hub** (for instance): https://hub.docker.com/repository/docker/ashymanouski/rsschool-devops-course-flask-app/general
 
 ### 2. Update Helm Values
 Before deployment, update the Docker image repository in `helm/application/flask/values.yaml` with your image that you pushed:
