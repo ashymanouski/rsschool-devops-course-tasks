@@ -1,18 +1,7 @@
 name: Deploy Jenkins
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'manifests/**'
-      - '.github/workflows/deploy-jenkins.yml'
-  pull_request:
-    branches:
-      - '*'
-    paths:
-      - 'manifests/**'
-      - '.github/workflows/deploy-jenkins.yml'
+  workflow_dispatch:
 
 permissions:
   id-token: write
