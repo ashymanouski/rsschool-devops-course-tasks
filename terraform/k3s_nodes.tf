@@ -23,7 +23,7 @@ resource "aws_security_group" "k3s_nodes_sg" {
     security_groups = [aws_security_group.bastion.id]
   }
 
-    ingress {
+  ingress {
     from_port       = 32001
     to_port         = 32001
     protocol        = "tcp"
