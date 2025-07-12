@@ -11,5 +11,8 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.nodePort | default 32001 }}
+      {{- end }}
   selector:
     {{- include "flask.selectorLabels" . | nindent 4 }}
