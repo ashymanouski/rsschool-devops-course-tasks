@@ -16,6 +16,13 @@ resource "aws_security_group" "bastion" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -36,7 +43,7 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [aws_security_group.bastion.id]
   source_dest_check      = false
 
-  user_data = base64encode(templatefile("${path.module}/user-data/common.sh", {
+  user_data = base64encode(templatefile("${path.module}/user-data/bastion.sh", {
     hostname          = "${var.project}-bastion"
     master_private_ip = aws_instance.k3s-master-node.private_ip
   }))
@@ -52,6 +59,16 @@ resource "aws_instance" "bastion" {
 resource "aws_eip" "bastion" {
   instance = aws_instance.bastion.id
   domain   = "vpc"
+
+  tags = merge(var.tags, {
+    Name = "${var.project}-bastion-eip"
+  })
+}
+
+resource "aws_ssm_parameter" "bastion_eip" {
+  name  = "/edu/${var.project}/bastion/eip"
+  type  = "String"
+  value = aws_eip.bastion.public_ip
 
   tags = merge(var.tags, {
     Name = "${var.project}-bastion-eip"

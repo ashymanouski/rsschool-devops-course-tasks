@@ -17,6 +17,13 @@ resource "aws_security_group" "k3s_nodes_sg" {
   }
 
   ingress {
+    from_port       = 32000
+    to_port         = 32000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
+  ingress {
     from_port = 0
     to_port   = 0
     protocol  = "-1"
@@ -56,6 +63,31 @@ resource "aws_instance" "k3s-master-node" {
   })
 }
 
+
+# Wait for master node to be ready by checking SSM parameter
+resource "null_resource" "wait_for_master_ready" {
+  depends_on = [aws_instance.k3s-master-node]
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Waiting for k3s master to be ready..."
+      for i in {1..30}; do
+        if aws ssm get-parameter \
+          --region ${var.aws_region} \
+          --name "/edu/${var.project}/k3s/node-token" \
+          --with-decryption \
+          --query 'Parameter.Value' \
+          --output text > /dev/null 2>&1; then
+          echo "Master node is ready!"
+          break
+        fi
+        echo "Attempt $i: Master not ready yet, waiting 10 seconds..."
+        sleep 10
+      done
+    EOT
+  }
+}
+
 resource "aws_instance" "k3s_worker_node_01" {
   ami                    = var.k3s_ami_id
   instance_type          = var.k3s_worker_instance_type
@@ -71,7 +103,7 @@ resource "aws_instance" "k3s_worker_node_01" {
     master_ip  = aws_instance.k3s-master-node.private_ip
   }))
 
-  depends_on = [aws_instance.k3s-master-node]
+  depends_on = [null_resource.wait_for_master_ready]
 
   tags = merge(var.tags, {
     Name = "${var.project}-k3s-worker-node-01"
@@ -122,6 +154,11 @@ resource "aws_iam_role_policy_attachment" "k3s_master_ssm" {
   policy_arn = aws_iam_policy.k3s_master_ssm.arn
 }
 
+resource "aws_iam_role_policy_attachment" "k3s_master_ebs_csi" {
+  role       = aws_iam_role.k3s_master.name
+  policy_arn = aws_iam_policy.ebs_csi_driver_policy.arn
+}
+
 resource "aws_iam_instance_profile" "k3s_master" {
   name = "${var.project}-k3s-master-profile"
   role = aws_iam_role.k3s_master.name
@@ -170,6 +207,11 @@ resource "aws_iam_policy" "k3s_worker_ssm" {
 resource "aws_iam_role_policy_attachment" "k3s_worker_ssm" {
   role       = aws_iam_role.k3s_worker.name
   policy_arn = aws_iam_policy.k3s_worker_ssm.arn
+}
+
+resource "aws_iam_role_policy_attachment" "k3s_worker_ebs_csi" {
+  role       = aws_iam_role.k3s_worker.name
+  policy_arn = aws_iam_policy.ebs_csi_driver_policy.arn
 }
 
 resource "aws_iam_instance_profile" "k3s_worker" {

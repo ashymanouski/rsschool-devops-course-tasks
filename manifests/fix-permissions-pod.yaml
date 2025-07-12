@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: jenkins-permissions-fix
+  namespace: jenkins
+spec:
+  restartPolicy: Never
+  containers:
+  - name: fix-permissions
+    image: busybox
+    command: ["/bin/sh", "-c"]
+    args:
+    - |
+      mkdir -p /data/jenkins-volume
+      chown -R 1000:1000 /data/jenkins-volume
+      chmod -R 755 /data/jenkins-volume
+      echo "Permissions fixed successfully"
+    volumeMounts:
+    - name: jenkins-data
+      mountPath: /data
+  volumes:
+  - name: jenkins-data
+    hostPath:
+      path: /data
+      type: DirectoryOrCreate
