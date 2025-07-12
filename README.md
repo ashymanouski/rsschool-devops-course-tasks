@@ -366,4 +366,4 @@ aws ssm get-parameter \
   --query 'Parameter.Value' \
   --output text
 ```
-Then access: http://<bastion-ip>:8080
+Then access: http://\<bastion-ip\>:8080
