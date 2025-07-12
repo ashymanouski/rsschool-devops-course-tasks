@@ -88,10 +88,10 @@ jobs:
         kubectl create namespace jenkins --dry-run=client -o yaml | kubectl apply -f -
         
         # Apply volume
-        kubectl apply -f manifests/jenkins-01-volume.yaml
+        kubectl apply -f helm/jenkins/jenkins-01-volume.yaml
         
         # Apply permissions fix
-        kubectl apply -f manifests/fix-permissions-pod.yaml
+        kubectl apply -f helm/jenkins/fix-permissions-pod.yaml
         
         # Wait for permissions fix to complete
         echo "Waiting for permissions fix to complete..."
@@ -104,7 +104,7 @@ jobs:
         kubectl delete pod jenkins-permissions-fix -n jenkins
         
         # Apply service account
-        kubectl apply -f manifests/jenkins-02-sa.yaml
+        kubectl apply -f helm/jenkins/jenkins-02-sa.yaml
         
         # Install Jenkins with Helm
         helm repo add jenkinsci https://charts.jenkins.io
@@ -112,7 +112,7 @@ jobs:
         
         helm upgrade --install jenkins jenkinsci/jenkins \
           --namespace jenkins \
-          --values manifests/jenkins-values.yaml \
+          --values helm/jenkins/jenkins-values.yaml \
           --wait \
           --timeout=10m
           
