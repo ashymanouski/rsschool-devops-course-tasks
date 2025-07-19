@@ -138,8 +138,8 @@ pipeline {
                         
                         echo "Pushing Docker images to ECR..."
                         sh """
-                            # Push both tags in one command
-                            buildah push --all-tags ${DOCKER_IMAGE} docker://${ECR_REGISTRY}/${ECR_REPOSITORY}
+                            buildah push ${DOCKER_IMAGE}:${DOCKER_TAG} docker://${ECR_REGISTRY}/${ECR_REPOSITORY}:${DOCKER_TAG}
+                            buildah push ${DOCKER_IMAGE}:latest docker://${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
                         """
                         
                         echo "Docker images pushed successfully to ECR"
