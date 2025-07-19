@@ -7,6 +7,7 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 - [Task 3: K8s Cluster Configuration and Creation](#task-3-documentation)
 - [Task 4: Jenkins Installation and Configuration](#task-4-documentation)
 - [Task 5: Simple Application Deployment with Helm](#task-5-documentation)
+- [Task 6: Application Deployment via Jenkins Pipeline](#task-6-documentation)
 
 # Task 1 Documentation
 
@@ -431,3 +432,185 @@ kubectl port-forward svc/flask-app 8080:8080 -n flask
 Then access: http://localhost:8080
 
 **Note**: Jenkins is still accessible at `http://<bastion-ip>/` (root path)
+
+---
+
+# Task 6 Documentation
+
+## Overview
+
+Task 6: Application Deployment via Jenkins Pipeline
+
+## Objective
+
+Configure a Jenkins pipeline to deploy your application on a Kubernetes (K8s) cluster. The pipeline covers the software lifecycle phases of build, testing, and deployment.
+
+## Prerequisites
+
+- K3s cluster from Task 3
+- Jenkins from Task 4
+- AWS ECR repository
+- SonarCloud account
+- Gmail account for notifications
+- GitHub repository with webhook access
+
+## Pipeline Features
+
+### CI/CD Pipeline Components
+- **Source Code Checkout**: GitHub webhook triggers
+- **Application Build**: Python application compilation
+- **Unit Tests**: Python pytest execution
+- **Security Check**: SonarQube analysis
+- **Docker Image Building**: Buildah for container creation
+- **Registry Push**: AWS ECR integration
+- **Kubernetes Deployment**: Helm deployment to K3s
+- **Application Verification**: Health checks and connectivity tests
+- **Email Notifications**: Success/failure alerts
+
+### Pipeline Architecture
+```
+GitHub Webhook → Jenkins → Multi-container Pod
+├── Python Container (build, tests, deployment)
+├── Buildah Container (Docker build/push)
+└── SonarScanner Container (security analysis)
+```
+
+## Setup Instructions
+
+### 1. Install Jenkins with Helm Chart
+
+```bash
+# Add Jenkins Helm repository
+helm repo add jenkinsci https://charts.jenkins.io
+helm repo update
+
+# Create namespace
+kubectl create namespace jenkins
+
+# Install/Re-install Jenkins with custom values
+helm install jenkins jenkinsci/jenkins \
+  --namespace jenkins \
+  --values helm/jenkins/jenkins-values.yaml
+```
+
+### 2. Configure GitHub Webhook
+
+Set up webhook in your GitHub repository:
+
+```bash
+# Get bastion IP from SSM
+aws ssm get-parameter \
+  --name "/edu/aws-devops-2025q2/bastion/eip" \
+  --region us-east-2 \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text
+
+# Configure webhook in GitHub repository:
+# - URL: http://<bastion-ip>/github-webhook/
+# - Content type: application/json
+# - Events: Just the push event
+# - Active: true
+```
+
+### 3. Update Jenkins Credentials
+
+Before running the pipeline, update the following existing credentials in Jenkins:
+```bash
+# Access Jenkins UI
+# Go to: Manage Jenkins → Credentials → System → Global credentials
+# Update existing credential:
+```
+
+#### SonarQube Token
+```bash
+# Update existing credential:
+# - ID: sonarqube-token
+# - Secret: [Your SonarCloud Token]
+```
+
+#### Email Recipients List
+```bash
+# Update existing credential:
+# - ID: email-recipients
+# - Secret: email1@gmail.com,email2@gmail.com
+```
+
+#### AWS Account ID
+```bash
+# Update existing credential:
+# - ID: aws-account-id
+# - Secret: [Your AWS Account ID]
+```
+
+### 4. Configure Email Notifications
+
+Update the Jenkins configuration to set up Gmail SMTP:
+
+```bash
+# Go to: Manage Jenkins → Configure System → Extended E-mail Notification
+# Configure SMTP settings:
+# - SMTP server: smtp.gmail.com
+# - SMTP Port: 587
+# - Use TLS: true
+# - Use SSL: false
+# - Username: your-gmail@gmail.com
+# - Password: [Your Gmail App Password]
+```
+
+## Pipeline Execution
+
+### Pipeline Triggers
+
+The pipeline is primarily triggered by GitHub webhooks on push events to the `task_6` branch:
+
+```bash
+# Automatic trigger via GitHub webhook
+# - Push to task_6 branch triggers pipeline automatically
+# - Webhook URL: http://<bastion-ip>/github-webhook/
+# - No manual intervention required
+
+# Manual trigger (if needed)
+# - Go to Jenkins UI → flask-app-pipeline → Build Now
+# - Useful for testing or re-running failed builds
+```
+
+### Expected Pipeline Flow
+1. **Checkout**: Clone repository from GitHub
+2. **Build**: Compile Python application
+3. **Unit Tests**: Run pytest in Python container
+4. **Security Check**: SonarQube analysis
+5. **Build Docker**: Create Docker image with Buildah
+6. **Push to ECR**: Upload image to AWS ECR
+7. **Deploy**: Helm deployment to K3s cluster
+8. **Verify**: Health checks and connectivity tests
+9. **Notify**: Email success/failure notifications
+
+
+## Troubleshooting
+
+### Common Issues
+
+#### Email Notifications Not Working
+- Verify Gmail app password is correct
+- Check SMTP settings in Jenkins configuration
+- Ensure email recipients credential is properly set
+
+#### SonarQube Analysis Failing
+- Verify SonarCloud token is valid
+- Check project key and organization settings
+- Ensure source code path is correct
+
+#### ECR Push Failing
+- Verify AWS credentials and permissions
+- Check ECR repository exists
+- Ensure Buildah container has proper permissions
+
+#### Helm Deployment Issues
+- Ensure image pull secrets are configured
+
+#### GitHub Webhook Issues
+- Verify bastion IP is accessible
+- Check webhook URL format: `http://<bastion-ip>/github-webhook/`
+- Ensure repository has push permissions
+- Verify nginx reverse proxy is configured on bastion
