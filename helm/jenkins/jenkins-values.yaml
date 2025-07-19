@@ -413,6 +413,7 @@ controller:
     - role-strategy:latest
     - github:latest
     - pipeline-stage-view:latest
+    - sonar:latest
 
   # If set to false, Jenkins will download the minimum required version of all dependencies.
   # -- Download the minimum required version or latest version of all dependencies
@@ -534,6 +535,11 @@ controller:
                       id: "aws-account-id"
                       secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
                       description: "AWS Account ID for ECR registry"
+                  - string:
+                      scope: GLOBAL
+                      id: "sonarqube-token"
+                      secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+                      description: "SonarQube authentication token"
       hello-world: |-
          jobs:
           - script: >
