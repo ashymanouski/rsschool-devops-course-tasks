@@ -56,6 +56,7 @@ pipeline {
         DOCKER_IMAGE = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
         DOCKER_TAG = "${BUILD_NUMBER}"
         //KUBECONFIG = credentials('k3s-kubeconfig')
+        EMAIL_RECIPIENTS = credentials('email-recipients')
     }
     
     stages {
@@ -242,15 +243,36 @@ pipeline {
         }
         
         success {
-            script {
-                echo "Pipeline succeeded!"
-            }
+            emailext (
+                subject: "Jenkins Build SUCCESS: ${JOB_NAME} [${BUILD_NUMBER}]",
+                body: """
+                    <p><strong>Build Status:</strong> SUCCESS</p>
+                    <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
+                    <p><strong>Job Name:</strong> ${JOB_NAME}</p>
+                    <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+                    <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
+                    <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
+                """,
+                to: "${EMAIL_RECIPIENTS}",
+                attachLog: false
+            )
         }
         
         failure {
-            script {
-                echo "Pipeline failed!"
-            }
+            emailext (
+                subject: "Jenkins Build FAILURE: ${JOB_NAME} [${BUILD_NUMBER}]",
+                body: """
+                    <p><strong>Build Status:</strong> FAILURE</p>
+                    <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
+                    <p><strong>Job Name:</strong> ${JOB_NAME}</p>
+                    <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+                    <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
+                    <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
+                    <p><strong>Error Details:</strong> Check the build log for more information.</p>
+                """,
+                to: "${EMAIL_RECIPIENTS}",
+                attachLog: true
+            )
         }
     }
 }

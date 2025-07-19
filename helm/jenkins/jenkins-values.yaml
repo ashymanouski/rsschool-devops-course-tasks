@@ -574,6 +574,11 @@ controller:
                       id: "k3s-kubeconfig"
                       secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
                       description: "K3s cluster kubeconfig for Helm deployments"
+                  - string:
+                      scope: GLOBAL
+                      id: "email-recipients"
+                      secret: "mytechnicalemail.willsetupmanually@gmail.com,myotheremail.willsetupmanually@gmail.com"
+                      description: "List of email recipients for Jenkins notifications"
       hello-world: |-
          jobs:
           - script: >
