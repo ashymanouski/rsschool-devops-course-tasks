@@ -252,7 +252,8 @@ pipeline {
                     <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
                 """,
                 to: "${EMAIL_RECIPIENTS}",
-                attachLog: false
+                attachLog: true,
+                mimeType: 'text/html'
             )
         }
         
@@ -267,7 +268,8 @@ pipeline {
                     <p><strong>Error Details:</strong> Check the build log for more information.</p>
                 """,
                 to: "${EMAIL_RECIPIENTS}",
-                attachLog: true
+                attachLog: true,
+                mimeType: 'text/html'
             )
         }
     }
