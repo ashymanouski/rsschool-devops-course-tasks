@@ -555,11 +555,6 @@ controller:
                   githubPush()
                 }
                 properties {
-                    pipelineTriggers {
-                      triggers {
-                        githubPush()
-                      }
-                    }
                     githubProjectProperty {
                       displayName('Flask App')
                       projectUrlStr('https://github.com/ashymanouski/rsschool-devops-course-tasks/')
