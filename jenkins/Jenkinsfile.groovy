@@ -88,7 +88,7 @@ pipeline {
                             sh """
                                 sonar-scanner \\
                                     -Dsonar.projectKey=rsschool-devops-course-tasks \\
-                                    -Dsonar.projectName='Flask App' \\
+                                    -Dsonar.projectName='rsschool-devops-course-tasks' \\
                                     -Dsonar.organization=ashymanouski \\
                                     -Dsonar.sources=app
                             """
