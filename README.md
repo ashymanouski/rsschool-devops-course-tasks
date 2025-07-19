@@ -441,10 +441,6 @@ Then access: http://localhost:8080
 
 Task 6: Application Deployment via Jenkins Pipeline
 
-## Objective
-
-Configure a Jenkins pipeline to deploy your application on a Kubernetes (K8s) cluster. The pipeline covers the software lifecycle phases of build, testing, and deployment.
-
 ## Prerequisites
 
 - K3s cluster from Task 3
@@ -519,7 +515,6 @@ Before running the pipeline, update the following existing credentials in Jenkin
 ```bash
 # Access Jenkins UI
 # Go to: Manage Jenkins → Credentials → System → Global credentials
-# Update existing credential:
 ```
 
 #### SonarQube Token
