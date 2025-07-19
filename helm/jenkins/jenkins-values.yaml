@@ -531,26 +531,18 @@ controller:
               - name: "SonarQube Cloud"
                 serverUrl: "https://sonarcloud.io"
                 credentialsId: "sonarqube-token"
-      # email-config: |
-      #     extendedEmail:
-      #       mailAccount:
-      #         smtpHost: "smtp.gmail.com"
-      #         smtpPort: 587
-      #         useSsl: false
-      #         useTls: true
-      #         username: "mytechnicalemail.willsetupmanually@gmail.com"
-      #         password: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
-      #       charset: "UTF-8"
-      #       defaultRecipients: "myotheremail.willsetupmanually@gmail.com"
-      #       defaultReplyTo: "mytechnicalemail.willsetupmanually@gmail.com"
-      #       defaultSubject: "Jenkins Build ${BUILD_STATUS}: ${JOB_NAME} [${BUILD_NUMBER}]"
-      #       defaultContent: |
-      #         <p><strong>Build Status:</strong> ${BUILD_STATUS}</p>
-      #         <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
-      #         <p><strong>Job Name:</strong> ${JOB_NAME}</p>
-      #         <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-      #         <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
-      #         <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
+      mailer: |
+        unclassified:
+          mailer:
+            authentication:
+              password: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+              username: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING@gmail.com"
+            charset: "UTF-8"
+            defaultSuffix: "@gmail.com"
+            smtpHost: "smtp.gmail.com"
+            smtpPort: "465"
+            useSsl: true
+            useTls: false
       welcome-message: |
         jenkins:
           systemMessage: Welcome to our CI\CD server. This Jenkins is configured and managed 'as code'.
@@ -571,13 +563,8 @@ controller:
                       description: "SonarQube authentication token"
                   - string:
                       scope: GLOBAL
-                      id: "k3s-kubeconfig"
-                      secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
-                      description: "K3s cluster kubeconfig for Helm deployments"
-                  - string:
-                      scope: GLOBAL
                       id: "email-recipients"
-                      secret: "mytechnicalemail.willsetupmanually@gmail.com,myotheremail.willsetupmanually@gmail.com"
+                      secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
                       description: "List of email recipients for Jenkins notifications"
       hello-world: |-
          jobs:
