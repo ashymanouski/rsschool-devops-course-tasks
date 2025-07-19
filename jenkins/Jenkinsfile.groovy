@@ -55,7 +55,6 @@ pipeline {
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         DOCKER_IMAGE = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
         DOCKER_TAG = "${BUILD_NUMBER}"
-        //KUBECONFIG = credentials('k3s-kubeconfig')
         EMAIL_RECIPIENTS = credentials('email-recipients')
     }
     
@@ -85,7 +84,7 @@ pipeline {
             steps {
                 container('sonar-scanner') {
                     withSonarQubeEnv('SonarQube Cloud') {
-                script {
+                        script {
                             echo "Running SonarQube analysis on source code..."
                             sh """
                                 sonar-scanner \
@@ -116,13 +115,10 @@ pipeline {
                         echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                         
                         dir('app') {
-                            // Build the image
                             sh "buildah bud --format docker -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
                             
-                            // Tag as latest
                             sh "buildah tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
                             
-                            // Verify image was created
                             sh "buildah images | grep ${ECR_REPOSITORY}"
                             
                             echo "Docker image built successfully with Buildah"
