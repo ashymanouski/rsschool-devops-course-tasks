@@ -134,19 +134,12 @@ pipeline {
             steps {
                 container('buildah') {
                     script {
-                        echo "Creating ECR repository if it doesn't exist..."
-                        sh "aws ecr describe-repositories --repository-names ${ECR_REPOSITORY} --region ${AWS_REGION} || aws ecr create-repository --repository-name ${ECR_REPOSITORY} --region ${AWS_REGION}"
-                        
-                        echo "Authenticating with ECR..."
                         sh "aws ecr get-login-password --region ${AWS_REGION} | buildah login --username AWS --password-stdin ${ECR_REGISTRY}"
                         
                         echo "Pushing Docker images to ECR..."
                         sh """
-                            # Push with build number tag
-                            buildah push ${DOCKER_IMAGE}:${DOCKER_TAG} docker://${DOCKER_IMAGE}:${DOCKER_TAG}
-                            
-                            # Push latest tag
-                            buildah push ${DOCKER_IMAGE}:latest docker://${DOCKER_IMAGE}:latest
+                            # Push both tags in one command
+                            buildah push --all-tags ${DOCKER_IMAGE} docker://${ECR_REGISTRY}/${ECR_REPOSITORY}
                         """
                         
                         echo "Docker images pushed successfully to ECR"

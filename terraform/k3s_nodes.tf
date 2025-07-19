@@ -172,9 +172,40 @@ resource "aws_iam_policy" "k3s_master_ssm" {
   tags = var.tags
 }
 
+resource "aws_iam_policy" "k3s_ecr" {
+  name = "${var.project}-k3s-ecr-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
 resource "aws_iam_role_policy_attachment" "k3s_master_ssm" {
   role       = aws_iam_role.k3s_master.name
   policy_arn = aws_iam_policy.k3s_master_ssm.arn
+}
+
+resource "aws_iam_role_policy_attachment" "k3s_master_ecr" {
+  role       = aws_iam_role.k3s_master.name
+  policy_arn = aws_iam_policy.k3s_ecr.arn
 }
 
 resource "aws_iam_role_policy_attachment" "k3s_master_ebs_csi" {
@@ -227,9 +258,16 @@ resource "aws_iam_policy" "k3s_worker_ssm" {
   tags = var.tags
 }
 
+
+
 resource "aws_iam_role_policy_attachment" "k3s_worker_ssm" {
   role       = aws_iam_role.k3s_worker.name
   policy_arn = aws_iam_policy.k3s_worker_ssm.arn
+}
+
+resource "aws_iam_role_policy_attachment" "k3s_worker_ecr" {
+  role       = aws_iam_role.k3s_worker.name
+  policy_arn = aws_iam_policy.k3s_ecr.arn
 }
 
 resource "aws_iam_role_policy_attachment" "k3s_worker_ebs_csi" {
