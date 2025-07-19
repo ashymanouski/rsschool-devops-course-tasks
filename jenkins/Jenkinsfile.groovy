@@ -55,6 +55,7 @@ pipeline {
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         DOCKER_IMAGE = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
         DOCKER_TAG = "${BUILD_NUMBER}"
+        KUBECONFIG = credentials('k3s-kubeconfig')
     }
     
     stages {
@@ -151,10 +152,30 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                script {
-                    echo "Deploying to K3s cluster..."
-                    dir('helm/application/flask') {
-                        echo "Helm deployment completed successfully"
+                container('python') {
+                    script {
+                        echo "Installing Helm..."
+                        sh '''
+                            curl https://get.helm.sh/helm-v3.14.0-linux-amd64.tar.gz -o helm.tar.gz
+                            tar -xzf helm.tar.gz
+                            mv linux-amd64/helm /usr/local/bin/
+                            rm -rf helm.tar.gz linux-amd64/
+                        '''
+                        
+                        echo "Deploying to K3s cluster..."
+                        dir('helm/application/flask') {
+                            sh """
+                                helm upgrade --install flask-app . \
+                                    --namespace flask \
+                                    --create-namespace \
+                                    --wait \
+                                    --timeout 5m \
+                                    --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \
+                                    --set image.tag=${DOCKER_TAG}
+                            """
+                            
+                            echo "Helm deployment completed successfully"
+                        }
                     }
                 }
             }
@@ -162,9 +183,21 @@ pipeline {
         
         stage('Application Verification') {
             steps {
-                script {
-                    echo "Verifying application deployment..."
-                    echo "Application verification completed successfully"
+                container('python') {
+                    script {
+                        echo "Verifying application deployment..."
+                        
+                        sh """
+                            kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
+                        """                  
+                       
+                        sh """
+                            echo "Testing application connectivity..."
+                            curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
+                        """
+                        
+                        echo "Application verification completed successfully"
+                    }
                 }
             }
         }

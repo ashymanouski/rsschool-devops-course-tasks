@@ -548,6 +548,11 @@ controller:
                       id: "sonarqube-token"
                       secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
                       description: "SonarQube authentication token"
+                  - string:
+                      scope: GLOBAL
+                      id: "k3s-kubeconfig"
+                      secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+                      description: "K3s cluster kubeconfig for Helm deployments"
       hello-world: |-
          jobs:
           - script: >
