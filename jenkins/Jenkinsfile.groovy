@@ -88,6 +88,7 @@ pipeline {
                             sh "sonar-scanner \
                                 -Dsonar.projectKey=flask-app \
                                 -Dsonar.projectName='Flask App' \
+                                -Dsonar.organization='ashymanouski' \
                                 -Dsonar.sources=app"
                         }
                     }
