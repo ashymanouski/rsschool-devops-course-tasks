@@ -15,6 +15,10 @@ upstream jenkins {
   server ${master_private_ip}:32000; # jenkins ip and port
 }
 
+upstream flask {
+  server ${master_private_ip}:32001; # flask ip and port
+}
+
 # Required for Jenkins websocket agents
 map \$http_upgrade \$connection_upgrade {
   default upgrade;
@@ -48,6 +52,14 @@ server {
       break;
     }
     sendfile on;
+  }
+
+  location /flask/ {
+      proxy_pass         http://flask/;
+      proxy_set_header   Host              \$http_host;
+      proxy_set_header   X-Real-IP         \$remote_addr;
+      proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
+      proxy_set_header   X-Forwarded-Proto \$scheme;
   }
 
   location / {

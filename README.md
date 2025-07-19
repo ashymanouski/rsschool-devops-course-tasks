@@ -6,6 +6,7 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 - [Task 2: Basic Infrastructure Configuration](#task-2-documentation)
 - [Task 3: K8s Cluster Configuration and Creation](#task-3-documentation)
 - [Task 4: Jenkins Installation and Configuration](#task-4-documentation)
+- [Task 5: Simple Application Deployment with Helm](#task-5-documentation)
 
 # Task 1 Documentation
 
@@ -366,4 +367,67 @@ aws ssm get-parameter \
   --query 'Parameter.Value' \
   --output text
 ```
-Then access: http://\<bastion-ip\>:8080
+Then access: `http://<bastion-ip>`
+
+---
+
+# Task 5 Documentation
+
+## Overview
+
+Task 5: Simple Application Deployment with Helm
+
+## Prerequisites
+
+- K3s cluster from Task 3
+- Docker installed
+- Helm installed
+- kubectl configured
+
+## Quick Deployment
+
+### 1. Docker Build and Push
+```bash
+docker login
+cd app
+docker build -t your-dockerhub-username/rsschool-devops-course-flask-app:latest .
+docker push your-dockerhub-username/rsschool-devops-course-flask-app:latest
+```
+
+### 2. Update Helm Values
+Before deployment, update the Docker image repository in `helm/application/flask/values.yaml` with your image that you pushed:
+```yaml
+image:
+  repository: your-dockerhub-username/rsschool-devops-course-flask-app
+  tag: latest
+```
+
+### 3. Helm Deployment
+```bash
+kubectl create namespace flask
+helm install flask-app ./helm/application/flask -n flask
+kubectl get all -n flask
+```
+
+### 4. Access the Application
+
+#### Option 1: Via Bastion Reverse Proxy (Recommended)
+```bash
+# Get bastion IP from SSM
+aws ssm get-parameter \
+  --name "/edu/aws-devops-2025q2/bastion/eip" \
+  --region us-east-2 \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text
+```
+
+Then access: `http://<bastion-ip>/flask/`
+
+#### Option 2: Port Forwarding
+```bash
+kubectl port-forward svc/flask-app 8080:8080 -n flask
+```
+Then access: http://localhost:8080
+
+**Note**: Jenkins is still accessible at `http://<bastion-ip>/` (root path)
