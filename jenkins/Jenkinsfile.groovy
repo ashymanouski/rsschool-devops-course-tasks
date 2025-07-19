@@ -81,7 +81,7 @@ pipeline {
                 container('buildah') {
                     script {
                         echo "Building Docker image with Buildah..."
-                        echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        // echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                         
                         dir('app') {
                             // sh "buildah bud -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
