@@ -36,6 +36,12 @@ pipeline {
     options {
         skipDefaultCheckout(true)
     }
+
+    
+    triggers {
+        githubPush()
+    }
+
     
     environment {
         AWS_ACCOUNT_ID = credentials('aws-account-id')
