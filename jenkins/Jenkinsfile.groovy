@@ -174,6 +174,10 @@ pipeline {
                                 echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
                                 export KUBECONFIG=/tmp/kubeconfig
                             '''
+
+                            sh """
+                                kubectl get pods
+                            """
                             
                             echo "Deploying to K3s cluster..."
                             dir('helm/application/flask') {
