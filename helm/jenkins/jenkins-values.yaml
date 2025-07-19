@@ -531,26 +531,26 @@ controller:
               - name: "SonarQube Cloud"
                 serverUrl: "https://sonarcloud.io"
                 credentialsId: "sonarqube-token"
-      email-config: |
-        unclassified:
-          extendedEmailPublisher:
-            smtpHost: "smtp.gmail.com"
-            smtpPort: "587"
-            useTLS: true
-            useSSL: false
-            username: "mytechnicalemail.willsetupmanually@gmail.com"
-            password: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
-            charset: "UTF-8"
-            defaultRecipients: "myotheremail.willsetupmanually@gmail.com"
-            defaultReplyTo: "mytechnicalemail.willsetupmanually@gmail.com"
-            defaultSubject: "Jenkins Build ${BUILD_STATUS}: ${JOB_NAME} [${BUILD_NUMBER}]"
-            defaultContent: |
-              <p><strong>Build Status:</strong> ${BUILD_STATUS}</p>
-              <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
-              <p><strong>Job Name:</strong> ${JOB_NAME}</p>
-              <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-              <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
-              <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
+      # email-config: |
+      #     extendedEmail:
+      #       mailAccount:
+      #         smtpHost: "smtp.gmail.com"
+      #         smtpPort: 587
+      #         useSsl: false
+      #         useTls: true
+      #         username: "mytechnicalemail.willsetupmanually@gmail.com"
+      #         password: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+      #       charset: "UTF-8"
+      #       defaultRecipients: "myotheremail.willsetupmanually@gmail.com"
+      #       defaultReplyTo: "mytechnicalemail.willsetupmanually@gmail.com"
+      #       defaultSubject: "Jenkins Build ${BUILD_STATUS}: ${JOB_NAME} [${BUILD_NUMBER}]"
+      #       defaultContent: |
+      #         <p><strong>Build Status:</strong> ${BUILD_STATUS}</p>
+      #         <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
+      #         <p><strong>Job Name:</strong> ${JOB_NAME}</p>
+      #         <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
+      #         <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
+      #         <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
       welcome-message: |
         jenkins:
           systemMessage: Welcome to our CI\CD server. This Jenkins is configured and managed 'as code'.
