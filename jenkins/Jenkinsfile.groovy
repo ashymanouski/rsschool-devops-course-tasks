@@ -250,8 +250,6 @@ pipeline {
                     <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
                     <p><strong>Job Name:</strong> ${JOB_NAME}</p>
                     <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-                    <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
-                    <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
                 """,
                 to: "${EMAIL_RECIPIENTS}",
                 attachLog: false
@@ -266,8 +264,6 @@ pipeline {
                     <p><strong>Build Number:</strong> ${BUILD_NUMBER}</p>
                     <p><strong>Job Name:</strong> ${JOB_NAME}</p>
                     <p><strong>Build URL:</strong> <a href="${BUILD_URL}">${BUILD_URL}</a></p>
-                    <p><strong>Duration:</strong> ${BUILD_DURATION}</p>
-                    <p><strong>Triggered by:</strong> ${BUILD_USER_ID ?: 'GitHub Webhook'}</p>
                     <p><strong>Error Details:</strong> Check the build log for more information.</p>
                 """,
                 to: "${EMAIL_RECIPIENTS}",
