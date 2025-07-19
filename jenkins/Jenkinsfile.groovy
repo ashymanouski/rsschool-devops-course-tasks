@@ -173,50 +173,38 @@ pipeline {
                             ./aws/install
                             rm -rf awscliv2.zip aws/
                         '''
+                            
+                        echo "Setting up ECR authentication..."
+                        sh """
+                            # Create namespace if it doesn't exist
+                            kubectl create namespace flask --dry-run=client -o yaml | kubectl apply -f -
+                            
+                            # Get ECR credentials and create a secret
+                            TOKEN=\$(aws ecr get-login-password --region ${AWS_REGION})
+                            
+                            # Create Docker registry secret for ECR
+                            kubectl create secret docker-registry ecr-registry-secret \\
+                                --namespace flask \\
+                                --docker-server=${ECR_REGISTRY} \\
+                                --docker-username=AWS \\
+                                --docker-password=\${TOKEN} \\
+                                --dry-run=client -o yaml | kubectl apply -f -
+                        """
                         
-                        echo "Setting up kubeconfig..."
-                        withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
-                            sh '''
-                                echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
-                                export KUBECONFIG=/tmp/kubeconfig
-                            '''
-
+                        echo "Deploying to K3s cluster..."
+                        dir('helm/application/flask') {
                             sh """
-                                kubectl get pods
+                                helm upgrade --install flask-app . \\
+                                    --namespace flask \\
+                                    --create-namespace \\
+                                    --wait \\
+                                    --timeout 5m \\
+                                    --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \\
+                                    --set image.tag=${DOCKER_TAG} \\
+                                    --set imagePullSecrets[0].name=ecr-registry-secret
                             """
                             
-                            echo "Setting up ECR authentication..."
-                            sh """
-                                # Create namespace if it doesn't exist
-                                kubectl create namespace flask --dry-run=client -o yaml | kubectl apply -f -
-                                
-                                # Get ECR credentials and create a secret
-                                TOKEN=\$(aws ecr get-login-password --region ${AWS_REGION})
-                                
-                                # Create Docker registry secret for ECR
-                                kubectl create secret docker-registry ecr-registry-secret \\
-                                  --namespace flask \\
-                                  --docker-server=${ECR_REGISTRY} \\
-                                  --docker-username=AWS \\
-                                  --docker-password=\${TOKEN} \\
-                                  --dry-run=client -o yaml | kubectl apply -f -
-                            """
-                            
-                            echo "Deploying to K3s cluster..."
-                            dir('helm/application/flask') {
-                                sh """
-                                    helm upgrade --install flask-app . \\
-                                        --namespace flask \\
-                                        --create-namespace \\
-                                        --wait \\
-                                        --timeout 5m \\
-                                        --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \\
-                                        --set image.tag=${DOCKER_TAG} \\
-                                        --set imagePullSecrets[0].name=ecr-registry-secret
-                                """
-                                
-                                echo "Helm deployment completed successfully"
-                            }
+                            echo "Helm deployment completed successfully"
                         }
                     }
                 }
@@ -227,26 +215,19 @@ pipeline {
             steps {
                 container('python') {
                     script {
-                        echo "Setting up kubeconfig..."
-                        withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
-                            sh '''
-                                echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
-                                export KUBECONFIG=/tmp/kubeconfig
-                            '''
-                            
-                            echo "Verifying application deployment..."
-                            
-                            sh """
-                                kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
-                            """                  
-                            
-                            sh """
-                                echo "Testing application connectivity..."
-                                curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
-                            """
-                            
-                            echo "Application verification completed successfully"
-                        }
+                        echo "Setting up kubeconfig..."                           
+                        echo "Verifying application deployment..."
+                        
+                        sh """
+                            kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
+                        """                  
+                        
+                        sh """
+                            echo "Testing application connectivity..."
+                            curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
+                        """
+                        
+                        echo "Application verification completed successfully"
                     }
                 }
             }
