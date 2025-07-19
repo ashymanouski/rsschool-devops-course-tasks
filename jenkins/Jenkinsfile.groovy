@@ -86,11 +86,10 @@ pipeline {
                         script {
                             echo "Running SonarQube analysis on source code..."
                             sh """
-                                sonar-scanner \\
-                                    -Dsonar.projectKey=rsschool-devops-course-tasks \\
-                                    -Dsonar.projectName='rsschool-devops-course-tasks' \\
-                                    -Dsonar.organization=ashymanouski \\
-                                    -Dsonar.sources=app
+                                sonar-scanner \
+                                    -Dsonar.organization=rsschool-devops-course-tasks \
+                                    -Dsonar.projectKey=rsschool-devops-course-tasks_flask-app \
+                                    -Dsonar.sources=app/code
                             """
                         }
                     }
