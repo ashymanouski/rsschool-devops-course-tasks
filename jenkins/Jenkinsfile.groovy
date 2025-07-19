@@ -26,6 +26,11 @@ pipeline {
                     volumeMounts:
                     - name: tmp-volume
                       mountPath: /var/lib/containers
+                  - name: sonar-scanner
+                    image: sonarsource/sonar-scanner-cli:latest
+                    command:
+                    - sleep
+                    - infinity
                   volumes:
                   - name: tmp-volume
                     emptyDir: {}
@@ -76,8 +81,16 @@ pipeline {
         
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    echo "Running SonarQube analysis on source code..."
+                container('sonar-scanner') {
+                    withSonarQubeEnv('SonarQube Cloud') {
+                        script {
+                            echo "Running SonarQube analysis on source code..."
+                            sh "sonar-scanner \
+                                -Dsonar.projectKey=flask-app \
+                                -Dsonar.projectName='Flask App' \
+                                -Dsonar.sources=app"
+                        }
+                    }
                 }
             }
         }
