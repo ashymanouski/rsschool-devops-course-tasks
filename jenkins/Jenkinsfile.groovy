@@ -85,11 +85,13 @@ pipeline {
                     withSonarQubeEnv('SonarQube Cloud') {
                         script {
                             echo "Running SonarQube analysis on source code..."
-                            sh "sonar-scanner \
-                                -Dsonar.projectKey=rsschool-devops-course-tasks \
-                                -Dsonar.projectName='Flask App' \
-                                -Dsonar.organization='ashymanouski' \
-                                -Dsonar.sources=app"
+                            sh """
+                                sonar-scanner \\
+                                    -Dsonar.projectKey=rsschool-devops-course-tasks \\
+                                    -Dsonar.projectName='Flask App' \\
+                                    -Dsonar.organization=ashymanouski \\
+                                    -Dsonar.sources=app
+                            """
                         }
                     }
                 }
