@@ -59,6 +59,14 @@ resource "aws_instance" "k3s-master-node" {
   vpc_security_group_ids = [aws_security_group.k3s_nodes_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.k3s_master.name
 
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+    tags = merge(var.tags, {
+      Name = "${var.project}-k3s-master-node-root"
+    })
+  }
+
   user_data = base64encode(templatefile("${path.module}/user-data/k3s-master.sh", {
     hostname   = "${var.project}-k3s-master-node"
     project    = var.project
@@ -102,6 +110,14 @@ resource "aws_instance" "k3s_worker_node_01" {
   subnet_id              = aws_subnet.private_2.id
   vpc_security_group_ids = [aws_security_group.k3s_nodes_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.k3s_worker.name
+
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+    tags = merge(var.tags, {
+      Name = "${var.project}-k3s-worker-node-01-root"
+    })
+  }
 
   user_data = base64encode(templatefile("${path.module}/user-data/k3s-worker.sh", {
     hostname   = "${var.project}-k3s-worker-node-01"

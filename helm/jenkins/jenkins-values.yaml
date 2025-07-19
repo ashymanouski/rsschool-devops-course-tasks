@@ -411,6 +411,7 @@ controller:
     - configuration-as-code:latest
     - job-dsl:latest
     - role-strategy:latest
+    - github:latest
 
   # If set to false, Jenkins will download the minimum required version of all dependencies.
   # -- Download the minimum required version or latest version of all dependencies
@@ -529,6 +530,36 @@ controller:
                 description('My test job for task 4')
                 steps {
                   shell('echo "Hello world"')
+                }
+              }
+      flask-app-pipeline: |-
+         jobs:
+          - script: >
+              pipelineJob('flask-app-pipeline') {
+                description('Flask application CI/CD pipeline for task 6')
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url('https://github.com/ashymanouski/rsschool-devops-course-tasks.git')
+                          credentials('github-credentials')
+                        }
+                        branch('task_6')
+                      }
+                    }
+                    scriptPath('jenkins/Jenkinsfile.groovy')
+                  }
+                }
+                triggers {
+                  githubPush()
+                }
+                properties {
+                  pipelineTriggers {
+                    triggers {
+                      githubPush()
+                    }
+                  }
                 }
               }
       # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/demos/role-strategy-auth/README.md

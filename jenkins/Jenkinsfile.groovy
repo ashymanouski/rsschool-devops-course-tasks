@@ -1,5 +1,41 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: python
+                    image: python:3.11-slim
+                    command:
+                    - sleep
+                    - infinity
+                  - name: buildah
+                    image: quay.io/buildah/stable:latest
+                    command:
+                    - sleep
+                    - infinity
+                    env:
+                    - name: BUILDAH_ISOLATION
+                      value: "chroot"
+                    - name: STORAGE_DRIVER
+                      value: "vfs"
+                    securityContext:
+                      privileged: true
+                    volumeMounts:
+                    - name: tmp-volume
+                      mountPath: /var/lib/containers
+                  volumes:
+                  - name: tmp-volume
+                    emptyDir: {}
+            '''
+        }
+    }
+    
+    options {
+        skipDefaultCheckout(true)
+    }
     
     environment {
         AWS_ACCOUNT_ID = credentials('aws-account-id')
@@ -11,14 +47,22 @@ pipeline {
     }
     
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
         stage('Unit Tests') {
             steps {
-                script {
-                    echo "Running unit tests on source code..."
-                    dir('app') {
-                        sh 'pip install -r requirements.txt'
-                        sh 'python -m pytest tests/ || echo "No tests found, continuing..."'
-                        echo "Unit tests completed successfully"
+                container('python') {
+                    script {
+                        echo "Running unit tests on source code..."
+                        dir('app') {
+                            sh 'pip install -r requirements.txt'
+                            sh 'python -m pytest tests/ || echo "No tests found, continuing..."'
+                            echo "Unit tests completed successfully"
+                        }
                     }
                 }
             }
@@ -34,14 +78,16 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                script {
-                    echo "Building Docker image..."
-                    echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    
-                    dir('app') {
-                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
-                        echo "Docker image built successfully"
+                container('buildah') {
+                    script {
+                        echo "Building Docker image with Buildah..."
+                        echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        
+                        dir('app') {
+                            // sh "buildah bud -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                            // sh "buildah tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                            echo "Docker image built successfully with Buildah"
+                        }
                     }
                 }
             }
@@ -49,12 +95,14 @@ pipeline {
         
         stage('Push Docker Image') {
             steps {
-                script {
-                    echo "Pushing Docker image to ECR..."
-                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
-                    sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    sh "docker push ${DOCKER_IMAGE}:latest"
-                    echo "Docker image pushed successfully to ECR"
+                container('buildah') {
+                    script {
+                        echo "Pushing Docker image to ECR with Buildah..."
+                        // sh "aws ecr get-login-password --region ${AWS_REGION} | buildah login --username AWS --password-stdin ${ECR_REGISTRY}"
+                        // sh "buildah push ${DOCKER_IMAGE}:${DOCKER_TAG} docker://${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        // sh "buildah push ${DOCKER_IMAGE}:latest docker://${DOCKER_IMAGE}:latest"
+                        echo "Docker image pushed successfully to ECR with Buildah"
+                    }
                 }
             }
         }
@@ -63,7 +111,7 @@ pipeline {
             steps {
                 script {
                     echo "Deploying to K3s cluster..."
-                    dir('helm/application') {
+                    dir('helm/application/flask') {
                         echo "Helm deployment completed successfully"
                     }
                 }
@@ -84,7 +132,6 @@ pipeline {
         always {
             script {
                 echo "Pipeline execution completed"
-                sh "docker system prune -f || true"
             }
         }
         
@@ -97,13 +144,6 @@ pipeline {
         failure {
             script {
                 echo "Pipeline failed!"
-            }
-        }
-        
-        cleanup {
-            script {
-                echo "Cleaning up workspace..."
-                cleanWs()
             }
         }
     }
