@@ -83,7 +83,7 @@ pipeline {
             steps {
                 container('sonar-scanner') {
                     withSonarQubeEnv('SonarQube Cloud') {
-                        script {
+                script {
                             echo "Running SonarQube analysis on source code..."
                             sh """
                                 sonar-scanner \
@@ -101,12 +101,28 @@ pipeline {
             steps {
                 container('buildah') {
                     script {
+                        echo "Installing AWS CLI..."
+                        sh '''
+                            dnf install -y unzip curl
+                            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                            unzip -q awscliv2.zip
+                            ./aws/install
+                            rm -rf awscliv2.zip aws/
+                        '''
+                        
                         echo "Building Docker image with Buildah..."
-                        // echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                        echo "Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                         
                         dir('app') {
-                            // sh "buildah bud -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
-                            // sh "buildah tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                            // Build the image
+                            sh "buildah bud --format docker -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                            
+                            // Tag as latest
+                            sh "buildah tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+                            
+                            // Verify image was created
+                            sh "buildah images | grep ${ECR_REPOSITORY}"
+                            
                             echo "Docker image built successfully with Buildah"
                         }
                     }
@@ -118,11 +134,23 @@ pipeline {
             steps {
                 container('buildah') {
                     script {
-                        echo "Pushing Docker image to ECR with Buildah..."
-                        // sh "aws ecr get-login-password --region ${AWS_REGION} | buildah login --username AWS --password-stdin ${ECR_REGISTRY}"
-                        // sh "buildah push ${DOCKER_IMAGE}:${DOCKER_TAG} docker://${DOCKER_IMAGE}:${DOCKER_TAG}"
-                        // sh "buildah push ${DOCKER_IMAGE}:latest docker://${DOCKER_IMAGE}:latest"
-                        echo "Docker image pushed successfully to ECR with Buildah"
+                        echo "Creating ECR repository if it doesn't exist..."
+                        sh "aws ecr describe-repositories --repository-names ${ECR_REPOSITORY} --region ${AWS_REGION} || aws ecr create-repository --repository-name ${ECR_REPOSITORY} --region ${AWS_REGION}"
+                        
+                        echo "Authenticating with ECR..."
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | buildah login --username AWS --password-stdin ${ECR_REGISTRY}"
+                        
+                        echo "Pushing Docker images to ECR..."
+                        sh """
+                            # Push with build number tag
+                            buildah push ${DOCKER_IMAGE}:${DOCKER_TAG} docker://${DOCKER_IMAGE}:${DOCKER_TAG}
+                            
+                            # Push latest tag
+                            buildah push ${DOCKER_IMAGE}:latest docker://${DOCKER_IMAGE}:latest
+                        """
+                        
+                        echo "Docker images pushed successfully to ECR"
+                        echo "Images available at: ${ECR_REGISTRY}/${ECR_REPOSITORY}"
                     }
                 }
             }
