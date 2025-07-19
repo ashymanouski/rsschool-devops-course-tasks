@@ -555,12 +555,16 @@ controller:
                   githubPush()
                 }
                 properties {
-                  pipelineTriggers {
-                    triggers {
-                      githubPush()
+                    pipelineTriggers {
+                      triggers {
+                        githubPush()
+                      }
+                    }
+                    githubProjectProperty {
+                      displayName('Flask App')
+                      projectUrlStr('https://github.com/ashymanouski/rsschool-devops-course-tasks/')
                     }
                   }
-                }
               }
       # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/demos/role-strategy-auth/README.md
       security: |-

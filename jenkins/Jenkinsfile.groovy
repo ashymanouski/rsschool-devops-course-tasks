@@ -37,6 +37,10 @@ pipeline {
         skipDefaultCheckout(true)
     }
     
+    triggers {
+        githubPush()
+    }
+    
     environment {
         AWS_ACCOUNT_ID = credentials('aws-account-id')
         AWS_REGION = 'us-east-1'
