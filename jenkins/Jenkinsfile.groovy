@@ -182,7 +182,7 @@ pipeline {
                             echo "Deploying to K3s cluster..."
                             dir('helm/application/flask') {
                                 sh """
-                                    helm upgrade --install flask-app . \
+                                    KUBECONFIG=/tmp/kubeconfig helm upgrade --install flask-app . \
                                         --namespace flask \
                                         --create-namespace \
                                         --wait \
@@ -221,7 +221,7 @@ pipeline {
                             echo "Verifying application deployment..."
                             
                             sh """
-                                kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
+                                KUBECONFIG=/tmp/kubeconfig kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
                             """                  
                            
                             sh """
