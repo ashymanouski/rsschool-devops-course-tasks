@@ -172,7 +172,14 @@ pipeline {
                         withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
                             sh '''
                                 echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+                                chmod 600 /tmp/kubeconfig
                                 export KUBECONFIG=/tmp/kubeconfig
+                                echo "Kubeconfig file created and permissions set"
+                                ls -la /tmp/kubeconfig
+                                echo "First few lines of kubeconfig:"
+                                head -5 /tmp/kubeconfig
+                                echo "Checking kubeconfig syntax:"
+                                kubectl config view --raw || echo "Kubeconfig syntax error detected"
                             '''
 
                             sh """
@@ -215,7 +222,10 @@ pipeline {
                         withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
                             sh '''
                                 echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+                                chmod 600 /tmp/kubeconfig
                                 export KUBECONFIG=/tmp/kubeconfig
+                                echo "Kubeconfig file created and permissions set"
+                                ls -la /tmp/kubeconfig
                             '''
                             
                             echo "Verifying application deployment..."
