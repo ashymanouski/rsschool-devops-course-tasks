@@ -55,7 +55,7 @@ pipeline {
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         DOCKER_IMAGE = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
         DOCKER_TAG = "${BUILD_NUMBER}"
-        KUBECONFIG = credentials('k3s-kubeconfig')
+        //KUBECONFIG = credentials('k3s-kubeconfig')
     }
     
     stages {
@@ -154,27 +154,41 @@ pipeline {
             steps {
                 container('python') {
                     script {
-                        echo "Installing Helm..."
+                        echo "Installing required tools..."
                         sh '''
+                            apt-get update && apt-get install -y curl
                             curl https://get.helm.sh/helm-v3.14.0-linux-amd64.tar.gz -o helm.tar.gz
                             tar -xzf helm.tar.gz
                             mv linux-amd64/helm /usr/local/bin/
                             rm -rf helm.tar.gz linux-amd64/
+                            
+                            # Install kubectl
+                            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                            chmod +x kubectl
+                            mv kubectl /usr/local/bin/
                         '''
                         
-                        echo "Deploying to K3s cluster..."
-                        dir('helm/application/flask') {
-                            sh """
-                                helm upgrade --install flask-app . \
-                                    --namespace flask \
-                                    --create-namespace \
-                                    --wait \
-                                    --timeout 5m \
-                                    --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \
-                                    --set image.tag=${DOCKER_TAG}
-                            """
+                        echo "Setting up kubeconfig..."
+                        withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
+                            sh '''
+                                echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+                                export KUBECONFIG=/tmp/kubeconfig
+                            '''
                             
-                            echo "Helm deployment completed successfully"
+                            echo "Deploying to K3s cluster..."
+                            dir('helm/application/flask') {
+                                sh """
+                                    helm upgrade --install flask-app . \
+                                        --namespace flask \
+                                        --create-namespace \
+                                        --wait \
+                                        --timeout 5m \
+                                        --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \
+                                        --set image.tag=${DOCKER_TAG}
+                                """
+                                
+                                echo "Helm deployment completed successfully"
+                            }
                         }
                     }
                 }
@@ -185,18 +199,34 @@ pipeline {
             steps {
                 container('python') {
                     script {
-                        echo "Verifying application deployment..."
+                        echo "Installing required tools..."
+                        sh '''
+                            apt-get update && apt-get install -y curl wget
+                            curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                            chmod +x kubectl
+                            mv kubectl /usr/local/bin/
+                        '''
                         
-                        sh """
-                            kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
-                        """                  
-                       
-                        sh """
-                            echo "Testing application connectivity..."
-                            curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
-                        """
-                        
-                        echo "Application verification completed successfully"
+                        echo "Setting up kubeconfig..."
+                        withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
+                            sh '''
+                                echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
+                                export KUBECONFIG=/tmp/kubeconfig
+                            '''
+                            
+                            echo "Verifying application deployment..."
+                            
+                            sh """
+                                kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
+                            """                  
+                           
+                            sh """
+                                echo "Testing application connectivity..."
+                                curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
+                            """
+                            
+                            echo "Application verification completed successfully"
+                        }
                     }
                 }
             }
