@@ -168,39 +168,26 @@ pipeline {
                             mv kubectl /usr/local/bin/
                         '''
                         
-                        echo "Setting up kubeconfig..."
-                        withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
-                            sh '''
-                                echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
-                                chmod 600 /tmp/kubeconfig
-                                export KUBECONFIG=/tmp/kubeconfig
-                                echo "Kubeconfig file created and permissions set"
-                                ls -la /tmp/kubeconfig
-                                echo "First few lines of kubeconfig:"
-                                head -5 /tmp/kubeconfig
-                                echo "Checking kubeconfig syntax:"
-                                kubectl config view --raw || echo "Kubeconfig syntax error detected"
-                            '''
 
+                        sh """
+                            kubectl get pods
+                        """
+                        
+                        echo "Deploying to K3s cluster..."
+                        dir('helm/application/flask') {
                             sh """
-                                kubectl get pods
+                                helm upgrade --install flask-app . \
+                                    --namespace flask \
+                                    --create-namespace \
+                                    --wait \
+                                    --timeout 5m \
+                                    --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \
+                                    --set image.tag=${DOCKER_TAG}
                             """
                             
-                            echo "Deploying to K3s cluster..."
-                            dir('helm/application/flask') {
-                                sh """
-                                    KUBECONFIG=/tmp/kubeconfig helm upgrade --install flask-app . \
-                                        --namespace flask \
-                                        --create-namespace \
-                                        --wait \
-                                        --timeout 5m \
-                                        --set image.repository=${ECR_REGISTRY}/${ECR_REPOSITORY} \
-                                        --set image.tag=${DOCKER_TAG}
-                                """
-                                
-                                echo "Helm deployment completed successfully"
-                            }
+                            echo "Helm deployment completed successfully"
                         }
+
                     }
                 }
             }
@@ -217,30 +204,19 @@ pipeline {
                             chmod +x kubectl
                             mv kubectl /usr/local/bin/
                         '''
+                                              
+                        echo "Verifying application deployment..."
                         
-                        echo "Setting up kubeconfig..."
-                        withCredentials([string(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) {
-                            sh '''
-                                echo "$KUBECONFIG_CONTENT" > /tmp/kubeconfig
-                                chmod 600 /tmp/kubeconfig
-                                export KUBECONFIG=/tmp/kubeconfig
-                                echo "Kubeconfig file created and permissions set"
-                                ls -la /tmp/kubeconfig
-                            '''
-                            
-                            echo "Verifying application deployment..."
-                            
-                            sh """
-                                KUBECONFIG=/tmp/kubeconfig kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
-                            """                  
-                           
-                            sh """
-                                echo "Testing application connectivity..."
-                                curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
-                            """
-                            
-                            echo "Application verification completed successfully"
-                        }
+                        sh """
+                            kubectl wait --for=condition=available --timeout=300s deployment/flask-app -n flask
+                        """                  
+                        
+                        sh """
+                            echo "Testing application connectivity..."
+                            curl -f -s -o /dev/null -w "Service response: %{http_code}\\n" http://flask-app.flask.svc.cluster.local:8080/ || echo "Service check failed"
+                        """
+                        
+                        echo "Application verification completed successfully"
                     }
                 }
             }
