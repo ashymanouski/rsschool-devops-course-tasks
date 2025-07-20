@@ -65,13 +65,26 @@ pipeline {
             }
         }
         
+        stage('Application Build') {
+            steps {
+                container('python') {
+                    script {
+                        echo "Building application and installing dependencies..."
+                        dir('app') {
+                            sh 'pip install -r requirements.txt'
+                            echo "Application build completed successfully"
+                        }
+                    }
+                }
+            }
+        }
+        
         stage('Unit Tests') {
             steps {
                 container('python') {
                     script {
                         echo "Running unit tests on source code..."
                         dir('app') {
-                            sh 'pip install -r requirements.txt'
                             sh 'python -m pytest tests/ || echo "No tests found, continuing..."'
                             echo "Unit tests completed successfully"
                         }
