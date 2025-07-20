@@ -56,6 +56,7 @@ pipeline {
         DOCKER_IMAGE = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
         DOCKER_TAG = "${BUILD_NUMBER}"
         EMAIL_RECIPIENTS = credentials('email-recipients')
+        JENKINS_URL = "http://3.21.177.134"
     }
     
     stages {
@@ -256,7 +257,7 @@ pipeline {
                 echo "Sending SUCCESS notification email"
                 mail to: "${EMAIL_RECIPIENTS}",
                     subject: "SUCCESS: Job '${JOB_NAME}' (#${BUILD_NUMBER})",
-                    body: "The Jenkins pipeline has completed successfully.\n\nBuild Details:\n- Job Name: ${JOB_NAME}\n- Build Number: ${BUILD_NUMBER}\n- Build URL: ${env.BUILD_URL}\n\nAll stages completed without errors."
+                    body: "The Jenkins pipeline has completed successfully.\n\nBuild Details:\n- Job Name: ${JOB_NAME}\n- Build Number: ${BUILD_NUMBER}\n- Build URL: ${JENKINS_URL}/job/${JOB_NAME}/${BUILD_NUMBER}/\n\nAll stages completed without errors."
                 echo "SUCCESS notification email sent successfully"
             }
         }
@@ -266,7 +267,7 @@ pipeline {
                 echo "Sending FAILURE notification email"
                 mail to: "${EMAIL_RECIPIENTS}",
                     subject: "FAILURE: Job '${JOB_NAME}' (#${BUILD_NUMBER})",
-                    body: "The Jenkins pipeline has failed.\n\nBuild Details:\n- Job Name: ${JOB_NAME}\n- Build Number: ${BUILD_NUMBER}\n- Build URL: ${env.BUILD_URL}\n\nPlease review the build logs for detailed error information and take appropriate action."
+                    body: "The Jenkins pipeline has failed.\n\nBuild Details:\n- Job Name: ${JOB_NAME}\n- Build Number: ${BUILD_NUMBER}\n- Build URL: ${JENKINS_URL}/job/${JOB_NAME}/${BUILD_NUMBER}/\n\nPlease review the build logs for detailed error information and take appropriate action."
                 echo "FAILURE notification email sent successfully"
             }
         }
@@ -276,7 +277,7 @@ pipeline {
                 echo "Sending UNSTABLE notification email"
                 mail to: "${EMAIL_RECIPIENTS}",
                     subject: "UNSTABLE: Job '${JOB_NAME}' (#${BUILD_NUMBER})",
-                    body: "The Jenkins pipeline has completed with warnings.\n\nBuild Details:\n- Job Name: ${JOB_NAME}\n- Build Number: ${BUILD_NUMBER}\n- Build URL: ${env.BUILD_URL}\n\nSome stages completed with warnings or non-critical errors. Please review the build logs for details."
+                    body: "The Jenkins pipeline has completed with warnings.\n\nBuild Details:\n- Job Name: ${JOB_NAME}\n- Build Number: ${BUILD_NUMBER}\n- Build URL: ${JENKINS_URL}/job/${JOB_NAME}/${BUILD_NUMBER}/\n\nSome stages completed with warnings or non-critical errors. Please review the build logs for details."
                 echo "UNSTABLE notification email sent successfully"
             }
         }
