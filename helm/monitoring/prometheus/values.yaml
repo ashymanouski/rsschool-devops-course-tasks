@@ -1,0 +1,28 @@
+prometheus:
+  enabled: true
+  
+  server:
+    persistentVolume:
+      enabled: true
+      size: 8Gi
+    
+    service:
+      type: NodePort
+      nodePort: 32002
+    
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+  
+  nodeExporter:
+    enabled: true
+  
+  kubeStateMetrics:
+    enabled: true
+  
+  pushgateway:
+    enabled: false 
