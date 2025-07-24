@@ -62,7 +62,6 @@ pipeline {
                                 helm upgrade --install prometheus . \\
                                     --namespace monitoring \\
                                     --create-namespace \\
-                                    --wait \\
                                     --timeout=10m \\
                                     --values values.yaml
                             """
@@ -78,7 +77,7 @@ pipeline {
                         sh "kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -"
                         
                         echo "Waiting for Prometheus deployment..."
-                        sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus -n monitoring --timeout=300s"
+                        sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=prometheus-server -n monitoring --timeout=300s"
                         
                         echo "Displaying deployment status..."
                         sh "kubectl get pods -n monitoring"
@@ -95,7 +94,7 @@ pipeline {
                         echo "Verifying Prometheus deployment..."
                         
                         sh """
-                            kubectl wait --for=condition=available --timeout=300s deployment/prometheus -n monitoring
+                            kubectl wait --for=condition=available --timeout=300s deployment/prometheus-server -n monitoring
                         """
                         
                         sh """
