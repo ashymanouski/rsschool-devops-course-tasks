@@ -1,9 +1,14 @@
+admin:
+  user: "admin"
+  password: ""
+  existingSecret: ""
+
 service:
   type: NodePort
   ports:
     grafana: 3000
   nodePorts:
-    grafana: 32003
+    grafana: "32003"
 
 resources:
   requests:
@@ -27,8 +32,8 @@ datasources:
         access: proxy
         isDefault: true
 
-dashboardsProvider:
-  enabled: true
+# dashboardsProvider:
+#   enabled: true
 
 # dashboardsConfigMaps:
 #   - configMapName: kubernetes-cluster-dashboard
