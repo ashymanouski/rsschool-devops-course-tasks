@@ -73,15 +73,14 @@ pipeline {
                 container('kubectl') {
                     script {
                         echo "Checking Prometheus status..."
-                        sh "kubectl get pods -n monitoring"
-                        sh "kubectl get svc -n monitoring"
+                        sh "kubectl get pods -n monitoring --no-headers"
                         
                         echo "Testing Prometheus connectivity with retries..."
                         sh """
                             for i in {1..10}; do
                                 echo "Attempt \$i/10: Testing Prometheus health..."
                                 if kubectl run test-prometheus-\$i --image=curlimages/curl:latest --rm -i --restart=Never -n monitoring -- \
-                                   curl -f -s http://prometheus-server:9090/-/healthy; then
+                                   curl -f -s http://prometheus-server/-/healthy; then
                                     echo "Prometheus health check PASSED on attempt \$i"
                                     break
                                 else
