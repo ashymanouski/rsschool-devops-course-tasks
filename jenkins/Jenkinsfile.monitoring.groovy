@@ -91,10 +91,11 @@ pipeline {
                                     kubectl run prometheus-health-check-${BUILD_NUMBER}-${attempt} \\
                                         --image=curlimages/curl:latest \\
                                         --rm \\
+                                        -i \\
                                         --restart=Never \\
-                                        --namespace=monitoring \\
+                                        -n monitoring \\
                                         -- \\
-                                        curl -f -s --max-time 30 http://prometheus-server/-/healthy
+                                        curl -f -s http://prometheus-server:80/-/healthy
                                 """
                                 echo "Prometheus health check PASSED on attempt ${attempt}"
                                 echo "Prometheus verification completed successfully"
