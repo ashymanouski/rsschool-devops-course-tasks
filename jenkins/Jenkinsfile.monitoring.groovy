@@ -16,6 +16,8 @@ pipeline {
                     command:
                     - sleep
                     - infinity
+                    securityContext:
+                      runAsUser: 1000
             '''
         }
     }
