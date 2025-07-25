@@ -72,37 +72,39 @@ pipeline {
                 
                 container('kubectl') {
                     script {
-                        echo "Waiting for Prometheus deployment..."
-                        sh "kubectl wait --for=condition=available deployment/prometheus-server -n monitoring --timeout=300s"
+                        def healthCheck = {
+                            try {
+                                sh "helm status prometheus -n monitoring"
+                                
+                                sh "kubectl wait --for=condition=ready --timeout=300s pod -l 'app.kubernetes.io/instance=prometheus' -n monitoring"
+                                
+                                sh """
+                                    kubectl run health-check-\${BUILD_NUMBER} --image=curlimages/curl:latest --rm -i --restart=Never -n monitoring --timeout=60s -- \
+                                    sh -c 'curl -f -s --max-time 10 http://prometheus-server:9090/-/healthy && echo "Health check: PASS"'
+                                """
+                                
+                                sh """
+                                    kubectl run metrics-check-\${BUILD_NUMBER} --image=curlimages/curl:latest --rm -i --restart=Never -n monitoring --timeout=60s -- \
+                                    sh -c 'curl -f -s --max-time 10 http://prometheus-server:9090/api/v1/query?query=up | grep -q "success" && echo "Metrics endpoint: PASS"'
+                                """
+                                
+                                return true
+                            } catch (Exception e) {
+                                echo "Health check failed: ${e.getMessage()}"
+                                sh "kubectl describe pods -n monitoring"
+                                sh "kubectl logs -l app.kubernetes.io/instance=prometheus --tail=50 -n monitoring"
+                                throw e
+                            }
+                        }
                         
-                        echo "Displaying deployment status..."
-                        sh "kubectl get pods -n monitoring"
-                        sh "kubectl get svc -n monitoring"
+                        echo "Executing comprehensive health checks..."
+                        healthCheck()
+                        echo "All health checks passed successfully"
                     }
                 }
             }
         }
-        
-        stage('Verify Prometheus') {
-            steps {
-                container('kubectl') {
-                    script {
-                        echo "Verifying Prometheus deployment..."
-                        
-                        sh """
-                            kubectl wait --for=condition=available --timeout=300s deployment/prometheus-server -n monitoring
-                        """
-                        
-                        sh """
-                            echo "Testing Prometheus service connectivity..."
-                            kubectl run test-prometheus --image=curlimages/curl:latest --rm -i --restart=Never -- curl -f -s -o /dev/null -w "Prometheus service response: %{http_code}\\n" http://prometheus-server.monitoring.svc.cluster.local:9090/ || echo "Prometheus service check failed"
-                        """
-                        
-                        echo "Prometheus verification completed successfully"
-                    }
-                }
-            }
-        }
+
     }
     
     post {
