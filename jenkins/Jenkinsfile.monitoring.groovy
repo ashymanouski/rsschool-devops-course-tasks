@@ -134,17 +134,21 @@ pipeline {
 
                         // Get credentials from Jenkins
                         withCredentials([usernamePassword(credentialsId: 'grafana-admin-credentials', usernameVariable: 'GRAFANA_USER', passwordVariable: 'GRAFANA_PASSWORD')]) {
-                            dir('helm/monitoring/grafana') {
-                                sh "helm dependency update"
-                                sh """
-                                    helm upgrade --install grafana . \\
-                                        --namespace monitoring \\
-                                        --create-namespace \\
-                                        --values values.yaml \\
-                                        --set admin.user=${GRAFANA_USER} \\
-                                        --set admin.password=${GRAFANA_PASSWORD}
-                                """
-                            }
+                            sh """
+                                helm upgrade --install grafana oci://registry-1.docker.io/bitnamicharts/grafana \\
+                                    --namespace monitoring \\
+                                    --create-namespace \\
+                                    --set admin.user=${GRAFANA_USER} \\
+                                    --set admin.password=${GRAFANA_PASSWORD} \\
+                                    --set service.type=NodePort \\
+                                    --set service.nodePorts.grafana=32003 \\
+                                    --set persistence.enabled=true \\
+                                    --set persistence.size=8Gi \\
+                                    --set resources.requests.memory=256Mi \\
+                                    --set resources.requests.cpu=100m \\
+                                    --set resources.limits.memory=512Mi \\
+                                    --set resources.limits.cpu=500m
+                            """
                         }
 
                         echo "Grafana visualization platform deployed successfully"
