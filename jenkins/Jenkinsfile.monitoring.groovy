@@ -141,8 +141,8 @@ pipeline {
                                         --namespace monitoring \\
                                         --create-namespace \\
                                         --values values.yaml \\
-                                        --set grafana.admin.user=${GRAFANA_USER} \\
-                                        --set grafana.admin.password=${GRAFANA_PASSWORD}
+                                        --set admin.user=${GRAFANA_USER} \\
+                                        --set admin.password=${GRAFANA_PASSWORD}
                                 """
                             }
                         }
