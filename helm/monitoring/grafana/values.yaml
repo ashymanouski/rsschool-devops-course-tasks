@@ -5,8 +5,6 @@ grafana:
     existingSecret: grafana-admin-secret
     userKey: admin-user
     passwordKey: admin-password
-    user: admin
-    password: admin123
 
   service:
     type: NodePort
