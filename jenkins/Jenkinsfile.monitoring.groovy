@@ -72,17 +72,31 @@ pipeline {
                 
                 container('kubectl') {
                     script {
-                        echo "Waiting for Prometheus deployment..."
-                        sh "timeout 300s kubectl wait --for=condition=available deployment/prometheus-server -n monitoring"
-                        
                         echo "Checking Prometheus status..."
                         sh "kubectl get pods -n monitoring"
                         sh "kubectl get svc -n monitoring"
                         
-                        echo "Testing Prometheus connectivity..."
+                        echo "Testing Prometheus connectivity with retries..."
                         sh """
-                            kubectl run test-prometheus --image=curlimages/curl:latest --rm -i --restart=Never -n monitoring -- \
-                            curl -f -s --max-time 30 http://prometheus-server:9090/-/healthy || echo "Health check failed"
+                            for i in {1..10}; do
+                                echo "Attempt \$i/10: Testing Prometheus health..."
+                                if kubectl run test-prometheus-\$i --image=curlimages/curl:latest --rm -i --restart=Never -n monitoring -- \
+                                   curl -f -s http://prometheus-server:9090/-/healthy; then
+                                    echo "Prometheus health check PASSED on attempt \$i"
+                                    break
+                                else
+                                    echo "Prometheus is not ready yet ..."
+                                    if [ \$i -eq 10 ]; then
+                                        echo "All 10 attempts failed. Prometheus health check FAILED"
+                                        echo "Checking pod status for debugging..."
+                                        kubectl get pods -n monitoring
+                                        kubectl describe pods -n monitoring | head -20
+                                        exit 1
+                                    else
+                                        sleep 10
+                                    fi
+                                fi
+                            done
                         """
                         
                         echo "Prometheus verification completed successfully"
