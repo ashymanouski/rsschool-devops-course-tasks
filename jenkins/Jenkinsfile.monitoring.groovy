@@ -77,30 +77,47 @@ pipeline {
                         echo "Checking Prometheus status..."
                         sh "kubectl get pods -n monitoring --no-headers"
                         
-                        echo "Testing Prometheus connectivity with retries..."
-                        sh """
-                            for i in {1..10}; do
-                                echo "Attempt \$i/10: Testing Prometheus health..."
-                                if kubectl run test-prometheus-\$i --image=curlimages/curl:latest --rm -i --restart=Never -n monitoring -- \
-                                   curl -f -s http://prometheus-server/-/healthy; then
-                                    echo "Prometheus health check PASSED on attempt \$i"
-                                    break
-                                else
-                                    echo "Prometheus is not ready yet ..."
-                                    if [ \$i -eq 10 ]; then
-                                        echo "All 10 attempts failed. Prometheus health check FAILED"
-                                        echo "Checking pod status for debugging..."
-                                        kubectl get pods -n monitoring
-                                        kubectl describe pods -n monitoring | head -20
-                                        exit 1
-                                    else
-                                        sleep 10
-                                    fi
-                                fi
-                            done
-                        """
+                        echo "Verifying Prometheus deployment..."
                         
-                        echo "Prometheus verification completed successfully"
+                        def maxRetries = 10
+                        def retryDelay = 10
+                        def attempt = 1
+                        
+                        while (attempt <= maxRetries) {
+                            echo "Health check attempt ${attempt}/${maxRetries}"
+                            
+                            try {
+                                sh """
+                                    kubectl run prometheus-health-check-${BUILD_NUMBER}-${attempt} \\
+                                        --image=curlimages/curl:latest \\
+                                        --rm \\
+                                        --restart=Never \\
+                                        --namespace=monitoring \\
+                                        -- \\
+                                        curl -f -s --max-time 30 http://prometheus-server/-/healthy
+                                """
+                                echo "Prometheus health check PASSED on attempt ${attempt}"
+                                echo "Prometheus verification completed successfully"
+                                break
+                            } catch (Exception e) {
+                                echo "Health check attempt ${attempt} failed: ${e.getMessage()}"
+                                
+                                if (attempt == maxRetries) {
+                                    echo "All ${maxRetries} health check attempts failed"
+                                    echo "Collecting diagnostic information..."
+                                    sh """
+                                        kubectl get pods -n monitoring
+                                        kubectl describe pods -n monitoring | head -50
+                                        kubectl logs -l app.kubernetes.io/instance=prometheus -n monitoring --tail=20
+                                    """
+                                    error "Prometheus health check failed after ${maxRetries} attempts"
+                                } else {
+                                    echo "Waiting ${retryDelay} seconds before next attempt..."
+                                    sleep retryDelay
+                                }
+                            }
+                            attempt++
+                        }
                     }
                 }
             }
