@@ -669,7 +669,7 @@ The monitoring stack is deployed using a dedicated Jenkins pipeline:
 
 ```bash
 # Access Jenkins UI
-# Go to: Jenkins → Monitoring Stack Pipeline → Build Now
+# Go to: Jenkins → monitoring-provisioning → Build Now
 ```
 
 #### Pipeline Stages
