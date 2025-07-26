@@ -1,0 +1,181 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting-config
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  contact-points.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - name: email-contact-point
+        receivers:
+          - uid: email-receiver
+            type: email
+            settings:
+              addresses: "admin@example.com"
+            disableResolveMessage: false
+        disableProvenance: false
+
+  alert-rules.yaml: |
+    apiVersion: 1
+    groups:
+      - name: kubernetes-cluster-alerts
+        folder: Kubernetes
+        interval: 1m
+        rules:
+          - uid: high-cpu-utilization
+            title: High CPU Utilization
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                model:
+                  expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+              - refId: C
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 80
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                  refId: C
+            noDataState: NoData
+            execErrState: Error
+            for: 5m
+            annotations:
+              summary: High CPU utilization detected
+              description: CPU utilization is above 80% for more than 5 minutes
+            labels:
+              severity: warning
+            isPaused: false
+
+          - uid: high-memory-utilization
+            title: High Memory Utilization
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                model:
+                  expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+              - refId: C
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 85
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                  refId: C
+            noDataState: NoData
+            execErrState: Error
+            for: 5m
+            annotations:
+              summary: High memory utilization detected
+              description: Memory utilization is above 85% for more than 5 minutes
+            labels:
+              severity: warning
+            isPaused: false
+
+          - uid: disk-space-low
+            title: Low Disk Space
+            condition: C
+            data:
+              - refId: A
+                datasourceUid: prometheus
+                model:
+                  expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+              - refId: C
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params:
+                          - 90
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                    - evaluator:
+                        params:
+                          - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                          - A
+                      reducer:
+                        params: []
+                        type: last
+                  refId: C
+            noDataState: NoData
+            execErrState: Error
+            for: 5m
+            annotations:
+              summary: Low disk space detected
+              description: Disk usage is above 90% for more than 5 minutes
+            labels:
+              severity: warning
+            isPaused: false 

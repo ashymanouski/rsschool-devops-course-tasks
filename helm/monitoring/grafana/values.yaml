@@ -24,6 +24,17 @@ persistence:
   enabled: true
   size: 8Gi
 
+# SMTP Configuration for smtp4dev
+smtp:
+  enabled: true
+  host: "smtp4dev.monitoring.svc.cluster.local"
+  port: 25
+  user: ""
+  password: ""
+  fromAddress: "grafana-ashymanouski@rs.school"
+  fromName: "Grafana Alerts"
+  skipVerify: true
+
 datasources:
   secretDefinition:
     apiVersion: 1
@@ -43,4 +54,8 @@ dashboardsProvider:
 
 dashboardsConfigMaps:
   - configMapName: cluster-monitoring-dashboard
-    fileName: cluster-monitoring.json 
+    fileName: cluster-monitoring.json
+
+# Alerting Configuration
+alerting:
+  configMapName: grafana-alerting-config 

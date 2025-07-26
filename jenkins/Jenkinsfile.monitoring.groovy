@@ -178,6 +178,29 @@ pipeline {
             }
         }
         
+        stage('Deploy SMTP Server') {
+            steps {
+                container('helm') {
+                    script {
+                        echo "Deploying smtp4dev SMTP server..."
+                        
+                        dir('helm/monitoring/smtp4dev') {
+                            sh "helm upgrade --install smtp4dev . --namespace monitoring --create-namespace --values values.yaml"
+                        }
+                        
+                        echo "smtp4dev SMTP server deployed successfully"
+                    }
+                }
+
+                container('kubectl') {
+                    script {
+                        echo "Checking smtp4dev status..."
+                        sh "kubectl get pods -n monitoring -l app=smtp4dev"
+                    }
+                }
+            }
+        }
+
         stage('Deploy Grafana') {
             steps {
                 container('helm') {
