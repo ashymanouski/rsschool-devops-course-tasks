@@ -18,6 +18,16 @@ data:
             disableResolveMessage: false
         disableProvenance: false
 
+  notification-policies.yaml: |
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: email-contact-point
+        group_by: ['alertname']
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 1h
+
   alert-rules.yaml: |
     apiVersion: 1
     groups:
