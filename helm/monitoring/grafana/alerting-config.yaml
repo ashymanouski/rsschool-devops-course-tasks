@@ -38,7 +38,7 @@ data:
         rules:
           - uid: high-cpu-utilization
             title: High CPU Utilization
-            condition: A
+            condition: B
             data:
               - refId: A
                 relativeTimeRange:
@@ -47,10 +47,36 @@ data:
                 datasourceUid: prometheus-uid
                 model:
                   editorMode: code
-                  expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+                  expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
+              - refId: B
+                queryType: ""
+                relativeTimeRange:
+                  from: 0
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params: [80]
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: [A]
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A > 80
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: B
             noDataState: NoData
             execErrState: Alerting
             for: 5m
@@ -63,7 +89,7 @@ data:
 
           - uid: high-memory-utilization
             title: High Memory Utilization
-            condition: A
+            condition: B
             data:
               - refId: A
                 relativeTimeRange:
@@ -72,10 +98,36 @@ data:
                 datasourceUid: prometheus-uid
                 model:
                   editorMode: code
-                  expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+                  expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
+              - refId: B
+                queryType: ""
+                relativeTimeRange:
+                  from: 0
+                  to: 0
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params: [85]
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: [A]
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A > 85
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: B
             noDataState: NoData
             execErrState: Alerting
             for: 5m
