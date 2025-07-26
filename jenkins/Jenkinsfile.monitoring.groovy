@@ -170,7 +170,7 @@ pipeline {
                         
                         // sh "kubectl apply -f helm/monitoring/grafana/templates/dashboards/"
                         
-                        sh "kubectl create configmap cluster-monitoring-dashboard --from-file=cluster-monitoring.json=helm/monitoring/grafana/dashboards/cluster-monitoring.json -n monitoring"
+                        sh "kubectl create configmap cluster-monitoring-dashboard --from-file=cluster-monitoring.json=helm/monitoring/grafana/dashboards/cluster-monitoring.json -n monitoring --dry-run=client -o yaml | kubectl apply -f -"
                         
                         echo "Dashboards deployed successfully"
                     }
