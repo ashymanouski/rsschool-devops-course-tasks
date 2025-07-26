@@ -58,6 +58,8 @@ data:
                   to: 0
                 datasourceUid: __expr__
                 model:
+                  type: threshold
+                  expression: A
                   conditions:
                     - evaluator:
                         params: [80]
@@ -70,10 +72,6 @@ data:
                         params: []
                         type: last
                       type: query
-                  datasource:
-                    type: __expr__
-                    uid: __expr__
-                  expression: A > 80
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: B
@@ -109,6 +107,8 @@ data:
                   to: 0
                 datasourceUid: __expr__
                 model:
+                  type: threshold
+                  expression: A
                   conditions:
                     - evaluator:
                         params: [85]
@@ -121,10 +121,6 @@ data:
                         params: []
                         type: last
                       type: query
-                  datasource:
-                    type: __expr__
-                    uid: __expr__
-                  expression: A > 85
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: B
