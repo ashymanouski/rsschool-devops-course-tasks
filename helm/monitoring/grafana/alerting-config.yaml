@@ -81,8 +81,15 @@ data:
             execErrState: Error
             for: 1m
             annotations:
-              summary: High CPU utilization detected
-              description: CPU utilization is above 80% for more than 1 minute on node {{ $labels.instance }}
+              summary: High CPU utilization detected on {{ $labels.instance }}
+              description: |
+                CPU utilization is {{ printf "%.2f" $values.A.Value }}% on node {{ $labels.instance }}
+                This exceeds the threshold of 80% for more than 1 minute.
+                
+                Current values:
+                - CPU Usage: {{ printf "%.2f" $values.A.Value }}%
+                - Node: {{ $labels.instance }}
+                - Time: {{ $labels.__alert_rule_uid__ }}
             labels:
               severity: warning
             isPaused: false
@@ -134,8 +141,15 @@ data:
             execErrState: Error
             for: 1m
             annotations:
-              summary: High memory utilization detected
-              description: Memory utilization is above 85% for more than 1 minute on node {{ $labels.instance }}
+              summary: High memory utilization detected on {{ $labels.instance }}
+              description: |
+                Memory utilization is {{ printf "%.2f" $values.A.Value }}% on node {{ $labels.instance }}
+                This exceeds the threshold of 85% for more than 1 minute.
+                
+                Current values:
+                - Memory Usage: {{ printf "%.2f" $values.A.Value }}%
+                - Node: {{ $labels.instance }}
+                - Time: {{ $labels.__alert_rule_uid__ }}
             labels:
               severity: warning
             isPaused: false
