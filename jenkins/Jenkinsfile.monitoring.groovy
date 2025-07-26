@@ -162,6 +162,20 @@ pipeline {
             }
         }
         
+        stage('Deploy Dashboards') {
+            steps {
+                container('kubectl') {
+                    script {
+                        echo "Deploying Grafana dashboards..."
+                        
+                        sh "kubectl apply -f helm/monitoring/grafana/templates/dashboards/"
+                        
+                        echo "Dashboards deployed successfully"
+                    }
+                }
+            }
+        }
+        
         stage('Deploy Grafana') {
             steps {
                 container('helm') {
