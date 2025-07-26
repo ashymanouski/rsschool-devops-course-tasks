@@ -36,7 +36,5 @@ dashboardsProvider:
   enabled: true
 
 dashboardsConfigMaps:
-  - configMapName: kubernetes-cluster-dashboard
-    fileName: kubernetes-cluster.json
-  - configMapName: node-exporter-dashboard
-    fileName: node-exporter.json 
+  - configMapName: cluster-monitoring-dashboard
+    fileName: cluster-monitoring.json 

@@ -1,0 +1,123 @@
+{
+  "id": null,
+  "title": "Cluster Monitoring Dashboard",
+  "tags": ["basic", "metrics", "monitoring"],
+  "style": "dark",
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "CPU Utilization",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "(rate(node_cpu_seconds_total{mode=~\"user|system|iowait|idle\"}[5m]) * 100) * on(instance) group_left(nodename) node_uname_info",
+          "legendFormat": "{{nodename}} {{mode}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Memory Utilization (MB)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "(node_memory_MemTotal_bytes / 1024 / 1024) * on(instance) group_left(nodename) node_uname_info",
+          "legendFormat": "Total {{nodename}}"
+        },
+        {
+          "expr": "(node_memory_MemAvailable_bytes / 1024 / 1024) * on(instance) group_left(nodename) node_uname_info",
+          "legendFormat": "Available {{nodename}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Storage Usage (GB)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "(node_filesystem_size_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024) * on(instance) group_left(nodename) node_uname_info",
+          "legendFormat": "Size {{nodename}}"
+        },
+        {
+          "expr": "(node_filesystem_avail_bytes{mountpoint=\"/\"} / 1024 / 1024 / 1024) * on(instance) group_left(nodename) node_uname_info",
+          "legendFormat": "Available {{nodename}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "decimals": 2
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Cluster Info",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "count(kube_node_info)",
+          "legendFormat": "Total Nodes"
+        },
+        {
+          "expr": "count(kube_node_status_condition{condition=\"Ready\", status=\"true\"})",
+          "legendFormat": "Healthy Nodes"
+        },
+        {
+          "expr": "count(kube_node_info) - count(kube_node_status_condition{condition=\"Ready\", status=\"true\"})",
+          "legendFormat": "Unhealthy Nodes"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Pod Count",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {
+          "expr": "count(kube_pod_info)",
+          "legendFormat": "Total Pods"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0
+        }
+      }
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "schemaVersion": 30,
+  "version": 1
+}
