@@ -60,15 +60,12 @@ pipeline {
                     script {
                         echo "Deploying Prometheus monitoring stack..."
                         
-                        dir('helm/monitoring/prometheus') {
-                            sh "helm dependency update"
-                            sh """
-                                helm upgrade --install prometheus . \\
-                                    --namespace monitoring \\
-                                    --create-namespace \\
-                                    --values values.yaml
-                            """
-                        }
+                        sh """
+                            helm upgrade --install prometheus oci://registry-1.docker.io/bitnamicharts/prometheus \\
+                                --namespace monitoring \\
+                                --create-namespace \\
+                                --values helm/monitoring/prometheus/values.yaml
+                        """
                         
                         echo "Prometheus monitoring stack deployed successfully"
                     }

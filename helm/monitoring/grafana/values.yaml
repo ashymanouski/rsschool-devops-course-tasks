@@ -8,7 +8,7 @@ service:
   ports:
     grafana: 3000
   nodePorts:
-    grafana: "32003"
+    grafana: "32004"
 
 resources:
   requests:
