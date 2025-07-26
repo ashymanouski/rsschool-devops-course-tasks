@@ -166,18 +166,42 @@ pipeline {
             steps {
                 container('kubectl') {
                     script {
-                        echo "Deploying Grafana dashboards..."
+                        echo "Deploying Grafana dashboards and alerting config..."
                         
                         // sh "kubectl apply -f helm/monitoring/grafana/templates/dashboards/"
                         
-                        sh "kubectl create configmap cluster-monitoring-dashboard --from-file=cluster-monitoring.json=helm/monitoring/grafana/dashboards/cluster-monitoring.json -n monitoring"
+                        sh "kubectl create configmap cluster-monitoring-dashboard --from-file=cluster-monitoring.json=helm/monitoring/grafana/dashboards/cluster-monitoring.json -n monitoring --dry-run=client -o yaml | kubectl apply -f -"
+                        sh "kubectl apply -f helm/monitoring/grafana/alerting-config.yaml"
                         
-                        echo "Dashboards deployed successfully"
+                        echo "Dashboards and alerting config deployed successfully"
                     }
                 }
             }
         }
-        
+
+        stage('Deploy SMTP Server') {
+            steps {
+                container('helm') {
+                    script {
+                        echo "Deploying smtp4dev SMTP server..."
+                        
+                        dir('helm/monitoring/smtp4dev') {
+                            sh "helm upgrade --install smtp4dev . --namespace monitoring --create-namespace --values values.yaml"
+                        }
+                        
+                        echo "smtp4dev SMTP server deployed successfully"
+                    }
+                }
+
+                container('kubectl') {
+                    script {
+                        echo "Checking smtp4dev status..."
+                        sh "kubectl get pods -n monitoring -l app=smtp4dev"
+                    }
+                }
+            }
+        }
+
         stage('Deploy Grafana') {
             steps {
                 container('helm') {
