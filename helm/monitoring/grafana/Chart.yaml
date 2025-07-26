@@ -1,0 +1,11 @@
+apiVersion: v2
+name: grafana
+description: A Helm chart for Grafana visualization platform
+type: application
+version: 0.1.0
+appVersion: "10.2.0"
+
+dependencies:
+  - name: grafana
+    version: 12.1.1
+    repository: https://charts.bitnami.com/bitnami 

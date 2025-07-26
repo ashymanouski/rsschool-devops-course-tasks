@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting-config
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  contact-points.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - name: email-contact-point
+        receivers:
+          - uid: email-receiver
+            type: email
+            settings:
+              addresses: "ashymanouski@student.com"
+            disableResolveMessage: false
+        disableProvenance: false
+
+  notification-policies.yaml: |
+    apiVersion: 1
+    policies:
+      - orgId: 1
+        receiver: email-contact-point
+        group_by: ['alertname']
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 1h
+
+  alert-rules.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: kubernetes-cluster-alerts
+        folder: dashboards
+        interval: 1m
+        rules:
+          - uid: high-cpu-utilization
+            title: High CPU Utilization
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus-uid
+                model:
+                  editorMode: code
+                  expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+                  instant: true
+                  intervalMs: 1000
+                  legendFormat: __auto
+                  maxDataPoints: 43200
+                  range: false
+                  refId: A
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params: [80]
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: [A]
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: B
+                  type: threshold
+            noDataState: NoData
+            execErrState: Error
+            for: 1m
+            annotations:
+              summary: High CPU utilization detected on {{ $labels.instance }}
+              description: |
+                CPU utilization is {{ printf "%.2f" $values.A.Value }}% on node {{ $labels.instance }}
+                This exceeds the threshold of 80% for more than 1 minute.
+                
+                Current values:
+                - CPU Usage: {{ printf "%.2f" $values.A.Value }}%
+                - Node: {{ $labels.instance }}
+                - Time: {{ $labels.__alert_rule_uid__ }}
+            labels:
+              severity: warning
+            isPaused: false
+            notification_settings:
+              receiver: email-contact-point
+
+          - uid: high-memory-utilization
+            title: High Memory Utilization
+            condition: B
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 600
+                  to: 0
+                datasourceUid: prometheus-uid
+                model:
+                  editorMode: code
+                  expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+                  instant: true
+                  intervalMs: 1000
+                  legendFormat: __auto
+                  maxDataPoints: 43200
+                  range: false
+                  refId: A
+              - refId: B
+                datasourceUid: __expr__
+                model:
+                  conditions:
+                    - evaluator:
+                        params: [85]
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params: [A]
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
+                  intervalMs: 1000
+                  maxDataPoints: 43200
+                  refId: B
+                  type: threshold
+            noDataState: NoData
+            execErrState: Error
+            for: 1m
+            annotations:
+              summary: High memory utilization detected on {{ $labels.instance }}
+              description: |
+                Memory utilization is {{ printf "%.2f" $values.A.Value }}% on node {{ $labels.instance }}
+                This exceeds the threshold of 85% for more than 1 minute.
+                
+                Current values:
+                - Memory Usage: {{ printf "%.2f" $values.A.Value }}%
+                - Node: {{ $labels.instance }}
+                - Time: {{ $labels.__alert_rule_uid__ }}
+            labels:
+              severity: warning
+            isPaused: false
+            notification_settings:
+              receiver: email-contact-point 

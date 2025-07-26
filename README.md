@@ -8,6 +8,7 @@ The Rolling Scopes School: AWS DevOps Course 2025 Q2
 - [Task 4: Jenkins Installation and Configuration](#task-4-documentation)
 - [Task 5: Simple Application Deployment with Helm](#task-5-documentation)
 - [Task 6: Application Deployment via Jenkins Pipeline](#task-6-documentation)
+- [Task 7: Prometheus Deployment on K8s](#task-7-documentation)
 
 # Task 1 Documentation
 
@@ -609,3 +610,296 @@ The pipeline is primarily triggered by GitHub webhooks on push events to the `ta
 - Check webhook URL format: `http://<bastion-ip>/github-webhook/`
 - Ensure repository has push permissions
 - Verify nginx reverse proxy is configured on bastion
+
+---
+
+# Task 7 Documentation
+
+## Overview
+
+Task 7: Prometheus Deployment on K8s - Monitoring Stack Setup
+
+## Prerequisites
+
+- K3s cluster from Task 3
+- Jenkins from Task 4
+- kubectl configured
+- Helm installed
+
+## Architecture
+
+```
+Monitoring Stack
+├── Prometheus Server (NodePort: 32002)
+│   ├── Node Exporter (DaemonSet)
+│   └── Kube State Metrics
+├── Grafana (NodePort: 32004)
+│   ├── Prometheus Data Source
+│   ├── Cluster Monitoring Dashboard
+│   └── Alert Rules (CPU/Memory)
+└── smtp4dev (SMTP Server for Testing)
+```
+
+## Setup Instructions
+
+### 1. Configure Jenkins Credentials
+
+Before running the monitoring pipeline, configure Grafana admin credentials in Jenkins:
+
+```bash
+# Access Jenkins UI
+# Go to: Manage Jenkins → Credentials → System → Global credentials
+```
+
+#### Grafana Admin Credentials
+```bash
+# The credential is already created by Jenkins JCasC configuration
+# You need to update the existing credential in Jenkins dashboard:
+
+# 1. Go to Jenkins → Manage Jenkins → Credentials → System → Global credentials
+# 2. Find credential with ID: grafana-admin-credentials
+# 3. Click on it and then "Update"
+# 4. Replace SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING with your own password and username
+# 5. Save the credential
+```
+
+### 2. Deploy Monitoring Stack via Jenkins Pipeline
+
+The monitoring stack is deployed using a dedicated Jenkins pipeline:
+
+```bash
+# Access Jenkins UI
+# Go to: Jenkins → monitoring-provisioning → Build Now
+```
+
+#### Pipeline Stages
+1. **Setup Tools**: Configure Helm repositories
+2. **Deploy Prometheus**: Install Prometheus with custom configuration
+3. **Deploy Node Exporter**: Install node-level metrics collection
+4. **Deploy Kube State Metrics**: Install Kubernetes object metrics
+5. **Deploy Dashboards**: Configure Grafana dashboards and alerting
+6. **Deploy SMTP Server**: Install smtp4dev for email testing
+7. **Deploy Grafana**: Install Grafana with data sources and credentials
+
+### 3. Verify Deployment
+
+```bash
+# Check all monitoring components
+kubectl get all -n monitoring
+
+# Verify pods are running
+kubectl get pods -n monitoring
+
+# Check services
+kubectl get svc -n monitoring
+
+# Check config maps
+kubectl get configmaps -n monitoring
+```
+
+Expected output:
+```bash
+# kubectl get all -n monitoring
+NAME                                      READY   STATUS    RESTARTS      AGE
+pod/grafana-66bb6cdd89-gt4br              1/1     Running   0             62m
+pod/kube-state-metrics-57984ff677-5l9gt   1/1     Running   0             62m
+pod/node-exporter-fp869                   1/1     Running   0             62m
+pod/node-exporter-j28sn                   1/1     Running   0             62m
+pod/prometheus-alertmanager-0             1/1     Running   0             63m
+pod/prometheus-server-67487745d-kggv7     1/1     Running   0             63m
+pod/smtp4dev-7f6d8cd78-4h5jp              1/1     Running   3 (33m ago)   62m
+
+NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+service/grafana                   NodePort    10.43.xxx.xxx    <none>        3000:32004/TCP   62m
+service/kube-state-metrics        ClusterIP   10.43.xxx.xxx    <none>        8080/TCP         62m
+service/node-exporter             ClusterIP   10.43.xxx.xxx    <none>        9100/TCP         62m
+service/prometheus-alertmanager   ClusterIP   10.43.xxx.xxx    <none>        80/TCP           63m
+service/prometheus-server         NodePort    10.43.xxx.xxx    <none>        80:32002/TCP     63m
+service/smtp4dev                  ClusterIP   10.43.xxx.xxx    <none>        25/TCP,80/TCP    62m
+
+NAME                           DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+daemonset.apps/node-exporter   2         2         2       2            2           <none>          62m
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/grafana              1/1     1            1           62m
+deployment.apps/kube-state-metrics   1/1     1            1           62m
+deployment.apps/prometheus-server    1/1     1            1           63m
+deployment.apps/smtp4dev             1/1     1            1           62m
+
+# kubectl get configmaps -n monitoring
+NAME                           DATA   AGE
+cluster-monitoring-dashboard   1      63m
+grafana-alerting-config        3      62m
+grafana-envvars                10     62m
+grafana-provider               1      62m
+kube-root-ca.crt               1      63m
+prometheus-alertmanager        1      63m
+prometheus-server              2      63m
+
+# kubectl get secrets -n monitoring
+NAME                                       TYPE                 DATA   AGE
+grafana-admin                              Opaque               1      63m
+grafana-datasources                        Opaque               1      63m
+grafana-smtp                               Opaque               2      63m
+sh.helm.release.v1.grafana.v1              helm.sh/release.v1   1      63m
+sh.helm.release.v1.kube-state-metrics.v1   helm.sh/release.v1   1      63m
+sh.helm.release.v1.node-exporter.v1        helm.sh/release.v1   1      63m
+sh.helm.release.v1.prometheus.v1           helm.sh/release.v1   1      63m
+sh.helm.release.v1.smtp4dev.v1             helm.sh/release.v1   1      63m
+```
+
+## Access Monitoring Services
+
+### 1. External Access (NodePort)
+
+If you have external access to your Kubernetes cluster:
+
+```bash
+# Get node IP
+kubectl get nodes -o wide
+
+# Access URLs
+Prometheus: http://<node-ip>:32002
+Grafana: http://<node-ip>:32004
+```
+
+### 2. Access via Bastion (Recommended)
+
+Access monitoring services through the bastion host reverse proxy (same as Jenkins access):
+
+```bash
+# Get bastion IP from SSM
+aws ssm get-parameter \
+  --name "/edu/aws-devops-2025q2/bastion/eip" \
+  --region us-east-2 \
+  --with-decryption \
+  --query 'Parameter.Value' \
+  --output text
+```
+
+Then access:
+- **Jenkins**: http://<bastion-ip>/
+
+### 3. Local Port Forwarding (Recommended)
+
+For local development and testing:
+
+```bash
+# Prometheus
+kubectl port-forward svc/prometheus-server 9090:80 -n monitoring
+
+# Grafana (in another terminal)
+kubectl port-forward svc/grafana 3000:3000 -n monitoring
+
+# smtp4dev (in another terminal)
+kubectl port-forward svc/smtp4dev 5000:80 -n monitoring
+```
+
+Then access:
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000
+- **smtp4dev Web Interface**: http://localhost:5000
+
+
+## Grafana Configuration
+
+### Login Credentials
+- **Username**: [Set via Jenkins credentials]
+- **Password**: [Set via Jenkins credentials]
+
+### Pre-configured Components
+
+#### Data Sources
+- **Prometheus**: Automatically configured
+- **URL**: http://prometheus-server.monitoring.svc.cluster.local:80
+
+#### Dashboards
+1. **Cluster Monitoring Dashboard**: CPU, memory, storage metrics
+   - Real-time metrics with 30-second refresh
+   - Node-level resource utilization
+   - Cluster health overview
+
+#### Alert Rules
+1. **High CPU Utilization**: >80% for 1 minute
+2. **High Memory Utilization**: >85% for 1 minute
+
+#### Contact Points
+- **Email**: ashymanouski@student.com
+- **SMTP**: smtp4dev.monitoring.svc.cluster.local:25
+
+## Testing Alerts
+
+### 1. CPU Stress Test
+
+```bash
+# SSH to any cluster node
+ssh -i ~/.ssh/your-key.pem ubuntu@<node-ip>
+
+# Install stress tool
+sudo apt-get update
+sudo apt-get install -y stress
+
+# Run CPU stress test for 5 minutes (10 CPU workers)
+sudo stress --cpu 10 --timeout 300s
+```
+
+### 2. Memory Stress Test
+
+```bash
+# Run memory stress test for 5 minutes (3 workers, 500MB each)
+sudo stress --vm 3 --vm-bytes 500M --timeout 300s &
+```
+
+### 3. Monitor Alerts
+
+During stress tests:
+1. Check Grafana Alerting → Alert Rules
+2. Verify alerts are firing
+3. Check smtp4dev web interface for received emails
+4. Verify email notifications are delivered
+
+## Monitoring Components
+
+### Prometheus
+- **Purpose**: Metrics collection and storage
+- **Port**: 32002 (NodePort)
+- **Storage**: 10Gi persistent volume
+- **Scraping**: Node Exporter, Kube State Metrics
+
+### Grafana
+- **Purpose**: Metrics visualization and alerting
+- **Port**: 32004 (NodePort)
+- **Storage**: 8Gi persistent volume
+- **Features**: Dashboards, alerting, SMTP integration
+
+### Node Exporter
+- **Purpose**: Node-level metrics collection
+- **Deployment**: DaemonSet (runs on all nodes)
+- **Metrics**: CPU, memory, disk, network
+
+### Kube State Metrics
+- **Purpose**: Kubernetes object metrics
+- **Metrics**: Pods, nodes, services, deployments
+
+### smtp4dev
+- **Purpose**: SMTP server for email testing
+- **SMTP Port**: 25 (ClusterIP) - for email delivery
+- **Web Interface Port**: 80 (ClusterIP) - for web UI
+- **Web Interface**: http://localhost:5000 (via port-forward to port 80)
+
+
+## Cleanup
+
+To remove the monitoring stack:
+
+```bash
+# Delete monitoring namespace (removes all components)
+kubectl delete namespace monitoring
+
+# Or delete individual components
+helm uninstall prometheus -n monitoring
+helm uninstall grafana -n monitoring
+helm uninstall node-exporter -n monitoring
+helm uninstall kube-state-metrics -n monitoring
+helm uninstall smtp4dev -n monitoring
+```

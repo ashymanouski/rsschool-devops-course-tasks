@@ -1,0 +1,12 @@
+image:
+  repository: rnwood/smtp4dev
+  tag: "3.8.7-ci20250525101"
+
+service:
+  type: ClusterIP
+  port: 80
+  smtpPort: 25
+
+persistence:
+  enabled: true
+  size: 1Gi 

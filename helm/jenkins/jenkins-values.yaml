@@ -566,6 +566,12 @@ controller:
                       id: "email-recipients"
                       secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
                       description: "List of email recipients for Jenkins notifications"
+                  - usernamePassword:
+                      scope: GLOBAL
+                      id: "grafana-admin-credentials"
+                      username: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+                      password: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+                      description: "Grafana admin username and password"
       hello-world: |-
          jobs:
           - script: >
@@ -600,6 +606,35 @@ controller:
                 properties {
                     githubProjectProperty {
                       displayName('Flask App')
+                      projectUrlStr('https://github.com/ashymanouski/rsschool-devops-course-tasks/')
+                    }
+                  }
+              }
+      monitoring-provisioning: |-
+         jobs:
+          - script: >
+              pipelineJob('monitoring-provisioning') {
+                description('Monitoring infrastructure provisioning pipeline for task 7')
+                definition {
+                  cpsScm {
+                    scm {
+                      git {
+                        remote {
+                          url('https://github.com/ashymanouski/rsschool-devops-course-tasks.git')
+                          credentials('github-credentials')
+                        }
+                        branch('task_7')
+                      }
+                    }
+                    scriptPath('jenkins/Jenkinsfile.monitoring.groovy')
+                  }
+                }
+                triggers {
+                  githubPush()
+                }
+                properties {
+                    githubProjectProperty {
+                      displayName('Monitoring Provisioning')
                       projectUrlStr('https://github.com/ashymanouski/rsschool-devops-course-tasks/')
                     }
                   }

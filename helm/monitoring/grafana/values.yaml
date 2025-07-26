@@ -1,0 +1,62 @@
+admin:
+  user: "admin"
+  password: ""
+  existingSecret: ""
+
+service:
+  type: NodePort
+  ports:
+    grafana: 3000
+  nodePorts:
+    grafana: "32004"
+
+
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 500m
+
+persistence:
+  enabled: true
+  size: 8Gi
+
+# SMTP Configuration for smtp4dev
+smtp:
+  enabled: true
+  host: "smtp4dev.monitoring.svc.cluster.local:25"
+  port: 25
+  user: ""
+  password: ""
+  fromAddress: "grafana-ashymanouski@rs.school"
+  fromName: "Grafana Alerts"
+  skipVerify: true
+
+datasources:
+  secretDefinition:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus-uid
+        url: http://prometheus-server.monitoring.svc.cluster.local:80
+        access: proxy
+        isDefault: true
+
+config:
+  server:
+    domain: "3.21.177.134"
+
+dashboardsProvider:
+  enabled: true
+
+dashboardsConfigMaps:
+  - configMapName: cluster-monitoring-dashboard
+    fileName: cluster-monitoring.json
+
+# Alerting Configuration
+alerting:
+  configMapName: grafana-alerting-config 
