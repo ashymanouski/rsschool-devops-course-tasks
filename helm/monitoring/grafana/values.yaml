@@ -34,6 +34,10 @@ datasources:
         access: proxy
         isDefault: true
 
+config:
+  server:
+    domain: "3.21.177.134"
+
 dashboardsProvider:
   enabled: true
 
