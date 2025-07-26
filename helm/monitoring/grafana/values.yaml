@@ -27,7 +27,7 @@ persistence:
 # SMTP Configuration for smtp4dev
 smtp:
   enabled: true
-  host: "smtp4dev.monitoring.svc.cluster.local"
+  host: "smtp4dev.monitoring.svc.cluster.local:25"
   port: 25
   user: ""
   password: ""
