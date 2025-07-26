@@ -123,6 +123,45 @@ pipeline {
             }
         }
 
+        stage('Deploy Node Exporter') {
+            steps {
+                container('helm') {
+                    script {
+                        echo "Deploying Node Exporter for node metrics..."
+                        
+                        sh """
+                            helm upgrade --install node-exporter oci://registry-1.docker.io/bitnamicharts/node-exporter \\
+                                --namespace monitoring \\
+                                --create-namespace \\
+                                --set hostNetwork=true \\
+                                --set hostPID=true \\
+                                --set kind=DaemonSet
+                        """
+                        
+                        echo "Node Exporter deployed successfully"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy Kube State Metrics') {
+            steps {
+                container('helm') {
+                    script {
+                        echo "Deploying Kube State Metrics for Kubernetes object metrics..."
+                        
+                        sh """
+                            helm upgrade --install kube-state-metrics oci://registry-1.docker.io/bitnamicharts/kube-state-metrics \\
+                                --namespace monitoring \\
+                                --create-namespace
+                        """
+                        
+                        echo "Kube State Metrics deployed successfully"
+                    }
+                }
+            }
+        }
+        
         stage('Deploy Grafana') {
             steps {
                 container('helm') {

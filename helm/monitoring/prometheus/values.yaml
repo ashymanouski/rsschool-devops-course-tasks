@@ -1,6 +1,8 @@
 server:
   service:
     type: NodePort
+    ports:
+      http: 80
     nodePorts:
       http: "32002"
   resources:
@@ -13,9 +15,31 @@ server:
   persistence:
     enabled: true
     size: 10Gi
+  
+  extraScrapeConfigs:
+    - job_name: 'node-exporter'
+      kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+              - monitoring
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+          action: keep
+          regex: node-exporter
+        - source_labels: [__address__]
+          regex: '([^:]+)(?::\d+)?'
+          target_label: __address__
+          replacement: '${1}:9100'
+    
+    - job_name: 'kube-state-metrics'
+      static_configs:
+        - targets: ['kube-state-metrics:8080']
 
 alertmanager:
   enabled: true
+  service:
+    type: ClusterIP
   resources:
     requests:
       memory: 128Mi
