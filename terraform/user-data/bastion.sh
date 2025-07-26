@@ -19,6 +19,10 @@ upstream flask {
   server ${master_private_ip}:32001; # flask ip and port
 }
 
+upstream grafana {
+  server ${master_private_ip}:32004; # grafana ip and port
+}
+
 # Required for Jenkins websocket agents
 map \$http_upgrade \$connection_upgrade {
   default upgrade;
@@ -60,6 +64,16 @@ server {
       proxy_set_header   X-Real-IP         \$remote_addr;
       proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
       proxy_set_header   X-Forwarded-Proto \$scheme;
+  }
+
+  location /grafana/ {
+      proxy_pass         http://grafana;
+      proxy_set_header   Host              \$http_host;
+      proxy_set_header   X-Real-IP         \$remote_addr;
+      proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
+      proxy_set_header   X-Forwarded-Proto \$scheme;
+      proxy_set_header   X-Forwarded-Host  \$http_host;
+      proxy_set_header   X-Forwarded-Port  \$server_port;
   }
 
   location / {

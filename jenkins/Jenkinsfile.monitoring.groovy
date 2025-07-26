@@ -184,7 +184,6 @@ pipeline {
                     script {
                         echo "Deploying Grafana visualization platform..."
 
-                        // Get credentials from Jenkins
                         withCredentials([usernamePassword(credentialsId: 'grafana-admin-credentials', usernameVariable: 'GRAFANA_USER', passwordVariable: 'GRAFANA_PASSWORD')]) {
                             sh """
                                 helm upgrade --install grafana oci://registry-1.docker.io/bitnamicharts/grafana \\
