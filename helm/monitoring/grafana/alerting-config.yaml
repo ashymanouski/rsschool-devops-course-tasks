@@ -48,18 +48,15 @@ data:
                 model:
                   editorMode: code
                   expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+                  instant: true
                   intervalMs: 1000
+                  legendFormat: __auto
                   maxDataPoints: 43200
+                  range: false
                   refId: A
               - refId: B
-                queryType: ""
-                relativeTimeRange:
-                  from: 0
-                  to: 0
                 datasourceUid: __expr__
                 model:
-                  type: threshold
-                  expression: A
                   conditions:
                     - evaluator:
                         params: [80]
@@ -72,18 +69,25 @@ data:
                         params: []
                         type: last
                       type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: B
+                  type: threshold
             noDataState: NoData
-            execErrState: Alerting
-            for: 5m
+            execErrState: Error
+            for: 1m
             annotations:
               summary: High CPU utilization detected
-              description: CPU utilization is above 80% for more than 5 minutes on node {{ $labels.instance }}
+              description: CPU utilization is above 80% for more than 1 minute on node {{ $labels.instance }}
             labels:
               severity: warning
             isPaused: false
+            notification_settings:
+              receiver: email-contact-point
 
           - uid: high-memory-utilization
             title: High Memory Utilization
@@ -96,19 +100,16 @@ data:
                 datasourceUid: prometheus-uid
                 model:
                   editorMode: code
-                  expr: (1 - (node_memory_MemAvailable_bytes{} / node_memory_MemTotal_bytes{})) * 100
+                  expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+                  instant: true
                   intervalMs: 1000
+                  legendFormat: __auto
                   maxDataPoints: 43200
+                  range: false
                   refId: A
               - refId: B
-                queryType: ""
-                relativeTimeRange:
-                  from: 0
-                  to: 0
                 datasourceUid: __expr__
                 model:
-                  type: threshold
-                  expression: A
                   conditions:
                     - evaluator:
                         params: [85]
@@ -121,15 +122,22 @@ data:
                         params: []
                         type: last
                       type: query
+                  datasource:
+                    type: __expr__
+                    uid: __expr__
+                  expression: A
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: B
+                  type: threshold
             noDataState: NoData
-            execErrState: Alerting
-            for: 5m
+            execErrState: Error
+            for: 1m
             annotations:
               summary: High memory utilization detected
-              description: Memory utilization is above 85% for more than 5 minutes on node {{ $labels.instance }}
+              description: Memory utilization is above 85% for more than 1 minute on node {{ $labels.instance }}
             labels:
               severity: warning
-            isPaused: false 
+            isPaused: false
+            notification_settings:
+              receiver: email-contact-point 
