@@ -96,7 +96,7 @@ data:
                 datasourceUid: prometheus-uid
                 model:
                   editorMode: code
-                  expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+                  expr: (1 - (node_memory_MemAvailable_bytes{} / node_memory_MemTotal_bytes{})) * 100
                   intervalMs: 1000
                   maxDataPoints: 43200
                   refId: A
