@@ -21,8 +21,9 @@ data:
   alert-rules.yaml: |
     apiVersion: 1
     groups:
-      - name: kubernetes-cluster-alerts
-        folder: Kubernetes
+      - orgId: 1
+        name: kubernetes-cluster-alerts
+        folder: dashboards
         interval: 1m
         rules:
           - uid: high-cpu-utilization
@@ -30,17 +31,18 @@ data:
             condition: A
             data:
               - refId: A
-                queryType: ""
                 relativeTimeRange:
                   from: 600
                   to: 0
-                datasourceUid: "Prometheus"
+                datasourceUid: prometheus-uid
                 model:
+                  editorMode: code
                   expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
                   intervalMs: 1000
                   maxDataPoints: 43200
+                  refId: A
             noDataState: NoData
-            execErrState: Error
+            execErrState: Alerting
             for: 5m
             annotations:
               summary: High CPU utilization detected
@@ -54,17 +56,18 @@ data:
             condition: A
             data:
               - refId: A
-                queryType: ""
                 relativeTimeRange:
                   from: 600
                   to: 0
-                datasourceUid: "Prometheus"
+                datasourceUid: prometheus-uid
                 model:
+                  editorMode: code
                   expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
                   intervalMs: 1000
                   maxDataPoints: 43200
+                  refId: A
             noDataState: NoData
-            execErrState: Error
+            execErrState: Alerting
             for: 5m
             annotations:
               summary: High memory utilization detected

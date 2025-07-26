@@ -41,6 +41,7 @@ datasources:
     datasources:
       - name: Prometheus
         type: prometheus
+        uid: prometheus-uid
         url: http://prometheus-server.monitoring.svc.cluster.local:80
         access: proxy
         isDefault: true
