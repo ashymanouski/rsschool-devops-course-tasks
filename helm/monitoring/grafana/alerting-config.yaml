@@ -34,7 +34,7 @@ data:
                 relativeTimeRange:
                   from: 600
                   to: 0
-                datasourceUid: prometheus
+                datasourceUid: "Prometheus"
                 model:
                   expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
                   intervalMs: 1000
@@ -58,7 +58,7 @@ data:
                 relativeTimeRange:
                   from: 600
                   to: 0
-                datasourceUid: prometheus
+                datasourceUid: "Prometheus"
                 model:
                   expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
                   intervalMs: 1000
