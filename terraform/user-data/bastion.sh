@@ -67,6 +67,7 @@ server {
   }
 
   location /grafana/ {
+      rewrite  ^/grafana/(.*)  /\$1 break;
       proxy_pass         http://grafana;
       proxy_set_header   Host              \$http_host;
       proxy_set_header   X-Real-IP         \$remote_addr;
