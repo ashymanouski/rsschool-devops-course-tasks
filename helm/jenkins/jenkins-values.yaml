@@ -566,6 +566,12 @@ controller:
                       id: "email-recipients"
                       secret: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
                       description: "List of email recipients for Jenkins notifications"
+                  - usernamePassword:
+                      scope: GLOBAL
+                      id: "grafana-admin-credentials"
+                      username: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+                      password: "SECRET_HAS_TO_BE_ADDED_MANUALLY_AFTER_JENKINS_PROVISIONING"
+                      description: "Grafana admin username and password"
       hello-world: |-
          jobs:
           - script: >
